@@ -1,0 +1,21 @@
+﻿{
+  "COMMENT_": [ "Env + Loc ", "Loc   ", "EnvLocPat  ", "TypeLocPat", "VerEnvLocPat ", "LocTypePat ", "AbbrevLocType", "Deploy Security Principal Name","Deploy App Id                         ", "Deploy Key Vault Object Id            ", "Runtime Security Principal Name  ", "Runtime App Id                        ", "Runtime Key Vault Object Id           " ],
+  "CertEast": [ "(CertEast)", "(Cert)", ".*(0cert).*", ".*(fnc0).*", ".*(v2cert0).*", ".*(0cert).*", ".*(0cr).*"    , "(_spn0nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn0nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "DevEast":  [ "(DevEast)" , "(Dev)" , ".*(0dev).*" , ".*(fnc0).*", ".*(v2dev0).*" , ".*(0dev).*" , ".*(0dv).*"    , "(_spn0nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn0nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "LoadEast": [ "(LoadEast)", "(Load)", ".*(0load).*", ".*(fnc0).*", ".*(v2load0).*", ".*(0load).*", ".*(0ld).*"    , "(_spn0nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn0nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "TestEast": [ "(TestEast)", "(Test)", ".*(0test).*", ".*(fnc0).*", ".*(v2test0).*", ".*(0tst).*" , ".*(0ts).*"    , "(_spn0nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn0nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "CertWest": [ "(CertWest)", "(Cert)", ".*(1cert).*", ".*(fnc1).*", ".*(v2cert1).*", ".*(1cert).*", ".*(1cr).*"    , "(_spn1nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn1nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "DevWest":  [ "(DevWest)" , "(Dev)" , ".*(1dev).*" , ".*(fnc1).*", ".*(v2dev1).*" , ".*(1dev).*" , ".*(1dv).*"    , "(_spn1nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn1nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "LoadWest": [ "(LoadWest)", "(Load)", ".*(1load).*", ".*(fnc1).*", ".*(v2load1).*", ".*(1load).*", ".*(1ld).*"    , "(_spn1nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn1nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+  "TestWest": [ "(TestWest)", "(Test)", ".*(1test).*", ".*(fnc1).*", ".*(v2test1).*", ".*(1tst).*" , ".*(1ts).*"    , "(_spn1nonprodegiftv2deploy)" , "(SOME_GUID)", "(SOME_GUID)", "(_spn1nonprodegiftv2runtime)", "(SOME_GUID)", "(SOME_GUID)" ],
+
+  "ProdEast": [ "(ProdEast)", "(Prod)", ".*(0prod).*", ".*(fnc0).*", ".*(v2prod0).*", ".*(0prod).*", ".*(0pr).*"    , "(_spn0prodegiftv2deploy)"    , "(SOME_GUID)", "(SOME_GUID)", "(_spn0prodegiftv2runtime)"   , "(SOME_GUID)", "(SOME_GUID)" ],
+  "ProdWest": [ "(ProdWest)", "(Prod)", ".*(1prod).*", ".*(fnc1).*", ".*(v2prod1).*", ".*(1prod).*", ".*(1pr).*"    , "(_spn1prodegiftv2deploy)"    , "(SOME_GUID)", "(SOME_GUID)", "(_spn1prodegiftv2runtime)"   , "(SOME_GUID)", "(SOME_GUID)" ],
+
+  "Invariants":  [],
+  "Cert": ["(Cert)", "(cert)"],
+  "Dev" : ["(Dev)",  "(dev)" ],
+  "Load": ["(Load)", "(load)"],
+  "Prod": ["(Prod)", "(prod)"],
+  "Test": ["(Test)", "(test)"]
+}
