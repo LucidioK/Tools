@@ -2,6 +2,17 @@
 # Utils.ps1
 #
 Add-Type -AssemblyName System.IO.Compression.FileSystem;
+$sqliteAssemblyPath = Join-Path $PSScriptRoot "System.Data.SQLite.dll";
+if (Test-Path $sqliteAssemblyPath)
+{
+    Add-Type -Path $sqliteAssemblyPath;
+    $global:sqliteLoaded = $true;
+}
+else
+{
+    $global:sqliteLoaded = $false;
+    Write-Host "Could not find $sqliteAssemblyPath, SQLite not available..." -ForegroundColor Magenta;
+}
 
 [string]$global:docker="";
 [string]$global:curl  ="";
@@ -25,6 +36,366 @@ $global:JsonBeautifierJsonBeautifyDefined = $false;
 $global:MaxRetries = 8;
 
 
+function global:getListOfFilesForNaniIndexInGitFolder()
+{
+    $undesired = '^\..*|.*_locales.*|.*\.txt|.*/external/.*|.*/assets/.*|.*\.exe.*|.*\.dll.*|.*\.png.*|.*\.ico.*|.*\.bin.*|.*\.nsi.*|.*\.gitignore.*|.*\.svg.*|.*\.map|.*/packages/.*|".*/node_modules/.*"|\.lst|test|\.xml';
+    $l = git ls-files | where { $_ -notmatch $undesired };
+    return $l;
+}
+
+function global:getUninstallData([string]$displayNameRegEx)
+{
+    gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1;
+}
+
+function global:isApplicationInstalled([string]$displayNameRegEx)
+{
+    ( gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1) -ne $null
+}
+
+function global:uninstallApplication([string]$displayNameRegEx)
+{
+    $ud =  gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1;
+    if ($ud -ne $null)
+    {
+        Write-Host "Uninstalling $($ud.DisplayName), version $($ud.DisplayVersion) " -ForegroundColor Green;
+        $uninstallString = $ud.UninstallString.Replace('/I{', '/X{');
+        
+        if ($uninstallString -notmatch '/quiet')
+        {
+            $uninstallString += ' /quiet';
+        }
+
+        cmd /c $uninstallString;
+        return $true;
+    }
+    else
+    {
+        Write-Host "Application $($ud.DisplayName) not found." -ForegroundColor Yellow;
+        return $false;
+    }
+}
+
+Function global:addToPath([string]$newDirectory)
+{
+    $OldPath=(Get-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINESystemCurrentControlSetControlSession ManagerEnvironment’ -Name PATH).Path
+
+    IF (!$newDirectory)
+    { 
+        write-host "No Folder Supplied. $ENV:PATH Unchanged" -ForegroundColor Yellow;
+        return $OldPath;
+    }
+
+    IF (!(TEST-PATH $newDirectory))
+    { 
+        Write-Host "Folder Does not Exist, Cannot be added to $ENV:PATH" -ForegroundColor Yellow;
+        return $OldPath;
+    }
+
+    IF ($ENV:PATH | Select-String -SimpleMatch $newDirectory)
+    { 
+        Write-Host "Folder already within $ENV:PATH" -ForegroundColor Yellow;
+        return $OldPath;
+    }
+
+    $NewPath=$OldPath+’;’+$newDirectory
+
+    Set-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINESystemCurrentControlSetControlSession ManagerEnvironment’ -Name PATH –Value $newPath
+
+    Return $NewPath
+}
+
+
+function global:executeWindowsCommand([string]$command)
+{
+    cmd /c $command;
+}
+
+function global:EWC($c1,$c2,$c3,$c4,$c5,$c6,$c7 )
+{
+    $c="";
+    if ($c1 -ne $null) { $c += "$c1 "; }
+    if ($c2 -ne $null) { $c += "$c2 "; }
+    if ($c3 -ne $null) { $c += "$c3 "; }
+    if ($c4 -ne $null) { $c += "$c4 "; }
+    if ($c5 -ne $null) { $c += "$c5 "; }
+    if ($c6 -ne $null) { $c += "$c6 "; }
+    if ($c7 -ne $null) { $c += "$c7 "; }
+
+
+    global:executeWindowsCommand $c;
+}
+
+function global:getSizeOfMaximumStringFromList([string[]]$stringList)
+{
+    return (($stringList | where { $_ -ne $null } | where { $_.GetType().Name -eq 'string' } | Select-Object -ExpandProperty Length | Measure-Object -Maximum).Maximum);
+}
+
+function global:gitPullAllSubfoldersOnMasterBranchUnderCurrentFolder()
+{
+    $dirs = (get-childitem -directory).Name;
+    $padSize = (getSizeOfMaximumStringFromList $dirs) + 1;
+    foreach ($dir in $dirs)
+    {
+        pushd .;
+        Write-Host ($dir.PadRight($padSize)) -ForegroundColor Green -NoNewline;
+        cd "$dir";
+        $branch = global:getCurrentBranchViaGit;
+        if ($branch -eq 'master')
+        {
+            git pull;
+        }
+        else
+        {
+            Write-Host "branch is not master, it is $branch";
+        }
+        popd;
+    }
+}
+
+function global:gitCleanAllSubfoldersUnderCurrentFolder()
+{
+    $dirs = ((get-childitem -directory).Name | Resolve-Path).Path;
+    $block = {
+        param($dir);
+        cd "$dir";
+        $clean = git clean -fdx  2>&1;
+        $gc = git gc --aggressive --force 2>&1;
+        return ($dir + "`nClean result:`n" + $clean + "`nGC Result:" + $gc);
+    };
+    $r = foreachParallel $l $block
+    return $r;
+}
+
+function global:getAllCommitUsersForFolder([string]$folderPath)
+{
+    $hs = @{};
+    pushd .;
+    $folderPath = Resolve-Path $folderPath;
+    cd $folderPath
+    $log = [string]::Join("`n",(git log --no-merges));
+    while ($log -match "Author:.*<([a-z]+)@.*>")
+    {
+        $logCount++;
+        $alias = $Matches[1];
+        if (!($hs.ContainsKey($alias)))
+        {
+            $hs.Add($alias, 0);
+        }
+        $hs[$alias] = $hs[$alias] + 1;
+        $p = $log.IndexOf($Matches[0]) + $Matches[0].Length;
+        $log = $log.Substring($p);
+    }
+
+    popd;
+    return $hs;
+}
+
+
+function global:deleteAllVariablesOfType([string]$typeName)
+{
+    $variables = get-variable;
+    foreach ($variable in $variables)
+    {
+        $thisTypeName = $v.Value.GetType();
+        if ($thisTypeName -eq $typeName)
+        {
+            write-host "Removing variable $($variable.Name)..." -ForegroundColor Green;
+            remove-variable -Name $variable.Name;
+        }
+    }
+}
+
+function global:highestVersion([string[]]$versions)
+{
+    return ((guaranteeList $versions) | foreach { [System.Version]$_ } | sort -Descending | select -First 1).ToString();
+}
+
+function global:joinPathList([string[]]$l)
+{
+    $p = $l[0];
+    for ($i=1;$i -lt $l.Count;$i++)
+    {
+        $p = Join-Path $p $l[$i];
+    }
+    return (Resolve-Path $p);
+}
+
+
+function global:loadNewtonSoftJson()
+{
+    loadNugetAssembly 'newtonsoft.json' 'Newtonsoft.Json.dll' $true;
+    loadNugetAssembly 'newtonsoft.json.schema' 'Newtonsoft.Json.Schema.dll' $true;
+}
+
+function global:loadNugetAssembly([string]$nugetPackageName, [string]$assemblyNameWithExtension, [bool]$autoInstallIfNotFound = $false)
+{
+    $nugetPackageFolder = "$($env:userprofile)/.nuget/packages/$nugetPackageName";
+    if (!(Test-Path $nugetPackageFolder))
+    {
+        if ($autoInstallIfNotFound)
+        {
+            nuget install $nugetPackageName;
+        }
+        else
+        {
+            throw "Please install package $nugetPackageName";
+        }
+    }
+    $packageVersion      = highestVersion ((get-childitem -Path $nugetPackageFolder).Name);
+    $libPath             = joinPathList @($nugetPackageFolder, $packageVersion, 'lib');
+    $dotNetVersionFilter = "Net$([environment]::Version.Major)*";
+    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | measure -Maximum).Maximum;
+    $assemblyFullPath    = joinPathList @($nugetPackageFolder, $packageVersion, 'lib', $dotNetVersionFolder, $assemblyNameWithExtension);
+
+    [System.Reflection.Assembly]::LoadFrom($assemblyFullPath);
+}
+
+function global:findNugetAssembly([string]$nugetPackageName, [string]$assemblyNameWithExtension)
+{
+    $nugetPackageFolder = "$($env:userprofile)/.nuget/packages/$nugetPackageName";
+    if (!(Test-Path $nugetPackageFolder))
+    {
+        throw "Please install package $nugetPackageName";
+    }
+    $packageVersion      = highestVersion ((get-childitem -Path $nugetPackageFolder).Name);
+    $libPath             = joinPathList @($nugetPackageFolder, $packageVersion, 'lib');
+    $dotNetVersionFilter = "Net$([environment]::Version.Major)*";
+    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | measure -Maximum).Maximum;
+    $assemblyFullPath    = joinPathList @($nugetPackageFolder, $packageVersion, 'lib', $dotNetVersionFolder, $assemblyNameWithExtension);
+    if (!(Test-Path $assemblyFullPath))
+    {
+        throw "$assemblyNameWithExtension not found at $assemblyFullPath ";
+    }
+    return $assemblyFullPath;
+}
+
+function global:sqliteConnect([string]$connectionStringOrFileName)
+{
+    if (Test-Path $connectionStringOrFileName)
+    {
+        $connectionStringOrFileName = "Data Source=$connectionStringOrFileName";
+    }
+    $c = [System.Data.SQLite.SQLiteConnection]::new($connectionStringOrFileName);
+    $c.Open();
+    return $c;
+}
+
+<#
+    Example:
+        class Metric
+        {
+	        [string]$Origin
+	        [string]$RE
+	        [string]$Dashboard
+	        [string]$Cloud
+	        [string]$Vertical
+	        [string]$Application
+	        [string]$Commit
+	        [Nullable[DateTime]]$Time
+	        [Nullable[double]]$Value
+        }
+
+    $m = [Metric]::new();
+    # set values of $m...
+
+    $c = sqliteConnect 'e:\dsv\pfMetrics.db'
+
+    # assuming the DB pfMetrics has a table named Metric,
+    # with the fields with the very same names as the class
+    # Metric, above.
+    $a = sqlInsert $c $m
+#>
+function global:sqliteInsert([System.Data.SQLite.SQLiteConnection]$connection, [Object]$rowValues)
+{
+    $tableName             = $rowValues.GetType().Name;
+    $propertyNames         = (Get-Member -InputObject $rowValues -MemberType Property).Name;
+    [string[]]$fieldNames  = @();
+    [string[]]$fieldValues = @();
+    foreach ($propertyName in $propertyNames)
+    {
+        $value             = $rowValues."$propertyName";
+        if ($value -ne $null)
+        {
+            $fieldNames   += "[$propertyName]";
+            $type          = ($value.GetType()).Name;
+            $vs            = $null;
+            switch -regex ($typeName)
+            {
+                'string' 
+                { 
+                    $vs    = "'$value'";
+                    break;
+                }
+                'int*|long|short|double|float|decimal'    
+                { 
+                    $vs    = "$value";
+                    break;
+                }
+                'datetime'    
+                { 
+                    $vs    = $value.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss");
+                    $vs    = "'$vs'"; 
+                    break;
+                }        
+            }
+            $fieldValues  += $vs;
+        }
+    }
+    $statement             = "INSERT INTO [$tableName] ($([string]::Join(',',$fieldNames))) VALUES ($([string]::Join(',',$fieldValues)));";
+    $command               = $connection.CreateCommand();
+    $command.CommandText   = $statement;
+    $affectedRows          = $command.ExecuteNonQuery();
+    return $affectedRows;
+}
+
+function global:sqliteQuery([System.Data.SQLite.SQLiteConnection]$connection, [PSCustomObject]$rowValues)
+{
+    $tableName             = $rowValues.GetType().Name;
+    $propertyNames         = (Get-Member -InputObject $rowValues -MemberType Property).Name;
+    [string[]]$conditions  = @();
+    foreach ($propertyName in $propertyNames)
+    {
+        $value             = $rowValues."$propertyName";
+        if ($value -ne $null)
+        {
+            $type          = ($value.GetType()).Name;
+            $vs            = $null;
+            switch -regex ($type)
+            {
+                'string' 
+                { 
+                    $vs    = "'$value'";
+                    break;
+                }
+                'int*|long|short|double|float|decimal'    
+                { 
+                    $vs    = "$value";
+                    break;
+                }
+                'datetime'    
+                { 
+                    $vs    = $value.ToUniversalTime().ToString("yyyy-MM-dd hh:mm:ss");
+                    $vs    = "'$vs'"; 
+                    break;
+                }        
+            }
+            if ($vs -ne $null)
+            {
+                $conditions   += "[$propertyName]=$vs";
+            }
+        }
+    }
+    $statement             = "SELECT * FROM [$tableName] WHERE $([string]::Join(" AND ", $conditions));";
+    $command               = $connection.CreateCommand();
+    $command.CommandText   = $statement;
+    $adapter               = [System.Data.SQLite.SQLiteDataAdapter]::new($command);
+    $data                  = [System.Data.DataSet]::new();
+    $adapter.Fill($data);
+    return ($data.Tables.Rows | select -Skip 1);
+}
+
+
 function global:guaranteeList([Object]$o)
 {
     if ($o -ne $null -and $o.GetType().FullName -ne 'System.Object[]')
@@ -39,7 +410,8 @@ function global:guaranteeList([Object]$o)
 # $block = { param($p); $r = (get-random) % 2000; Start-Sleep -Milliseconds $r; return "$p,$r"; }
 # $l = @('a', 'b', 'c', 'd', 'e')
 # $r = foreachParallel $l $block
-#
+# [string]::Join("; ",$r)
+# a,938; b,316; c,102; d,348; e,1519
 function global:foreachParallel([object[]]$inputList, [ScriptBlock]$scriptBlockWithOneParam)
 {
     function foreachParallelInternal([object[]]$inputList, [ScriptBlock]$scriptBlockWithOneParam)
@@ -593,8 +965,8 @@ function global:executeWithExceptionHandling([ScriptBlock]$script)
 
 function global:initializeVSS(
     [string]$path = 'C:\dsv\egift.infrastructure\GetVariableGroups\bin\Debug', 
-    [string]$vsURI = '"https://PROJECT.visualstudio.com',
-    [string]$personalToken = 'PERSONALTOKEN')
+    [string]$vsURI = '"https://sbux-dpapi.visualstudio.com',
+    [string]$personalToken = 'sjd4xntbzqo6c2w4qpt5itaqzkrequd3wo4yv4zmrvkib54rlt2a')
 {
     $global:vssPersonalToken = $personalToken;
     pushd .
@@ -686,6 +1058,7 @@ function global:findFile([string]$searchFolder, [string]$fileNamePattern, [strin
     foreach ($searchFolder in $searchFolderList)
     {
         $searchFolder = $searchFolder.Replace('\', '/').Trim('/');
+        $searchFolder = Resolve-Path $searchFolder;
         $sql = "select System.ItemPathDisplay FROM SYSTEMINDEX WHERE System.ITEMURL like 'file:$searchFolder/%' AND System.FileName LIKE '$fileNamePattern'";
         if ($optionalTextToFindWithoutWildcards -ne $null -and $optionalTextToFindWithoutWildcards.Length -gt 0)
         {
@@ -1373,6 +1746,16 @@ function global:SaveChangedFiles()
     [System.IO.Compression.ZipFile]::CreateFromDirectory($destinationBasePath, $zipFile);
     global:RemoveDirectoryIfNeeded 'SavedFiles';
     return $zipFile;
+}
+
+function global:extractTextFromBase64GZip([string]$base64Gzip)
+{
+    $bytes = [System.Convert]::FromBase64String($base64Gzip);
+    $msIn  = [System.IO.MemoryStream]::new($bytes);
+    $gzs   = [System.IO.Compression.GZipStream]::new($msIn, [System.IO.Compression.CompressionMode]::Decompress);
+    $msOut = [System.IO.MemoryStream]::new();
+    $gzs.CopyTo($msOut);
+    return   [System.Text.Encoding]::ASCII.GetString($msOut.ToArray());
 }
 
 function global:CreateDirectoryIfNeded($path)
