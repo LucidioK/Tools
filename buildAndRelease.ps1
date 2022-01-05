@@ -1,7 +1,7 @@
 ﻿param(
-    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=0)][string]$buildDefinitionName   = 'eGift.Infrastructure.Develop',
-    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=1)][string]$releaseDefinitionName = 'eGift.Infrastructure.Develop.Release',
-    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=2)][string]$artifactAlias         = 'eGift.Infrastructure.Develop',
+    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=0)][string]$buildDefinitionName   = 'pars.Infrastructure.Develop',
+    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=1)][string]$releaseDefinitionName = 'pars.Infrastructure.Develop.Release',
+    [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=2)][string]$artifactAlias         = 'pars.Infrastructure.Develop',
     [ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=3)][string[]]$Environments = ('certeast', 'deveast', 'loadeast', 'testeast')
     #[ValidateNotNullOrEmpty()][parameter(Mandatory=$false, Position=4)][string]$KeyVaultVariableName = 'keyVaultName'
 )

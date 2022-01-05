@@ -162,7 +162,7 @@ function global:azureGetCosmosContextByConnectionString([string]$connectionStrin
     $accountKey        = global:extractWithRegex $connectionString 'AccountKey=(.*?);';
     $accountKeySecret  = ConvertTo-SecureString -String $accountKey -AsPlainText -Force;
     #$resourceGroupName = (get-azurermresource -name $cosmosDbName).ResourceGroupName;
-    $databaseName      = ('egifting' +  $cosmosDbName.Replace('s00293ddb0','').Replace('egift',''));
+    $databaseName      = ('parsing' +  $cosmosDbName.Replace('uswddb0','').Replace('pars',''));
     $context           = New-CosmosDbContext -Account $cosmosDbName -Key $accountKeySecret -Database $databaseName;
     return $context;
 }
@@ -181,7 +181,7 @@ function global:azureGetCosmosCollection([CosmosDB.Context]$context, [string]$da
 }
 
 #function global:azureGetCosmosDocumentById([string]
-#get-cosmosdbdocument -Context $ctx -CollectionId EGiftOrders
+#get-cosmosdbdocument -Context $ctx -CollectionId parsOrders
 
 
 $global:PeekServiceBusAlreadyDefined = $false;
@@ -632,7 +632,7 @@ function global:loadVSTSVariableGroups()
         {
             $d = [System.IO.Path]::GetDirectoryName($global:GetVariableGroupsPath);
             cd $d;
-            $global:vstsVariables = &'.\GetVariableGroups.exe'  'EGiftAPI-V2*Variant*' | ConvertFrom-Json;
+            $global:vstsVariables = &'.\GetVariableGroups.exe'  'parsAPI-V2*Variant*' | ConvertFrom-Json;
         }
     }
     finally

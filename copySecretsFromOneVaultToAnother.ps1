@@ -1,12 +1,12 @@
 ﻿$v1v2kvt = @{
-    's00293kvt0certegift'='s00293kvt0certegiftv2';
-    's00293kvt0devegift' ='s00293kvt0devegiftv2';
-    's00293kvt0testegift'='s00293kvt0loadegiftv2';
-    's00293kvt0loadegift'='s00293kvt0tstegiftv2';
-    's00293kvt1certegift'='s00293kvt1certegiftv2';
-    's00293kvt1devegift' ='s00293kvt1devegiftv2';
-    's00293kvt1loadegift'='s00293kvt1loadegiftv2';
-    's00293kvt1testegift'='s00293kvt1tstegiftv2'};
+    'uswkvt0certpars'='uswkvt0certparsv2';
+    'uswkvt0devpars' ='uswkvt0devparsv2';
+    'uswkvt0testpars'='uswkvt0loadparsv2';
+    'uswkvt0loadpars'='uswkvt0tstparsv2';
+    'uswkvt1certpars'='uswkvt1certparsv2';
+    'uswkvt1devpars' ='uswkvt1devparsv2';
+    'uswkvt1loadpars'='uswkvt1loadparsv2';
+    'uswkvt1testpars'='uswkvt1tstparsv2'};
 $secrets = @('domaineventsbprimaryconnectionstring', 'domaineventsbsecondaryconnectionstring', 'serviceBusConnectionString');
 
 foreach ($v1kvt in $v1v2kvt.Keys)

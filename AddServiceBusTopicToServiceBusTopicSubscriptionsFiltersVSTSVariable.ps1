@@ -15,7 +15,7 @@ pushd .
 try
 {
     cd (Resolve-Path (Join-Path $global:powerShellScriptDirectory '..'))
-    $currentTopics             =  (.\GetVariable\bin\Debug\GetVariable.exe EGiftAPI-V2-CI-Invariants serviceBusTopicSubscriptionsFilters) | ConvertFrom-Json;
+    $currentTopics             =  (.\GetVariable\bin\Debug\GetVariable.exe parsAPI-V2-CI-Invariants serviceBusTopicSubscriptionsFilters) | ConvertFrom-Json;
     if ($topicName -ne 'PleaseDoNotAdd')
     {
         $newTopic                  = New-Object -TypeName topic;
@@ -26,7 +26,7 @@ try
     }
     $currentTopicsJson         = ($currentTopics | ConvertTo-Json -Compress).Replace('\u0027', "'");
     $currentTopicsJson         = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($currentTopicsJson));
-    (.\SetVariable\bin\Debug\SetVariable.exe 'EGiftAPI-V2-CI-Invariants' 'serviceBusTopicSubscriptionsFilters' $currentTopicsJson)
+    (.\SetVariable\bin\Debug\SetVariable.exe 'parsAPI-V2-CI-Invariants' 'serviceBusTopicSubscriptionsFilters' $currentTopicsJson)
 }
 finally
 {

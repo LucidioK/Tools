@@ -51,7 +51,7 @@
     <Compile Include="TestARMTemplate.ps1" />
     <Compile Include="TestAzureCashstarCallbackFunction.ps1" />
     <Compile Include="TestChaseCallback.ps1" />
-    <Compile Include="testEGiftV2ConsolidatedTemplate.ps1" />
+    <Compile Include="testparsV2ConsolidatedTemplate.ps1" />
     <Compile Include="TestLocalCashstarCallbackFunction.ps1" />
     <Compile Include="TestLocalCashstarGetOrderFunction.ps1" />
     <Compile Include="Utils.ps1" />

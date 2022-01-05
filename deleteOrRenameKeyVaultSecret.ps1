@@ -1,5 +1,5 @@
 ﻿param(
-    [parameter(Mandatory=$false,  Position=0)][string]$KeyVaultNameRegex = 's00293.*kvt.*egift.*',
+    [parameter(Mandatory=$false,  Position=0)][string]$KeyVaultNameRegex = 'usw.*kvt.*pars.*',
     [parameter(Mandatory=$false,  Position=2)][string]$SecretName = 'serviceBusConnectionString',
     [ValidateSet('Delete', 'Rename')]
     [parameter(Mandatory=$false,  Position=3)][string]$Operation = 'Rename',

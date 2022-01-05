@@ -2,38 +2,9 @@
 # when you open a new Powershell command.
 # 
 
-#function global:startServiceIfNeeded([string]$serviceName, [string]$startMode = 'Automatic')
-#{
-#
-#    $service = Get-WmiObject -Class win32_service | Where-Object {$_.name -like $serviceName};
-#    if ($service -ne $null)
-#    {
-#        if ($service.StartMode -ne $startMode)
-#        {
-#            Set-Service -Name $serviceName -StartMode $startMode;
-#        }
-#        else
-#        { 
-#            if ($service.State -ne 'Running')
-#            {
-#                Start-Service -Name $serviceName;
-#            }
-#        }
-#    }
-#    else
-#    {
-#        throw "Service $serviceName not found.";
-#    }
-#}
-#
-#global:startServiceIfNeeded 'WinRM';
-#
-#try{Enable-PSRemoting –force -ErrorAction SilentlyContinue;}catch{};
-#
-#Enter-PSSession -ComputerName $env:computername;
-#
+
 $global:lastTime = Get-Date;
-$global:azureSubscriptionNames = ('s00197csubnpDPAPI1','s00197csubproddpapi2','s00197dsubsbdpsand');
+$global:azureSubscriptionNames = ('sub1','sub2','subX');
 
 function elapsedTime([int]$number)
 {
@@ -247,7 +218,7 @@ function LK-Azure-GetTopics
     [CmdletBinding()]
     param
     (
-        [ValidateSet('0dev','0load','0prod','0test','1dev','1load','1prod','1test')]
+        
         [parameter(Mandatory=$true, Position=0)][string]$locationEnvironment
     )
     $connectionString  = $global:settings.serviceBusConnectionStrings | where { $_.Contains($locationEnvironment) };
@@ -261,7 +232,7 @@ function LK-Azure-GetTopicSubscriptions
     [CmdletBinding()]
     param
     (
-        [ValidateSet('0dev','0load','0prod','0test','1dev','1load','1prod','1test')]
+        
         [parameter(Mandatory=$true, Position=0)][string]$locationEnvironment,
         [parameter(Mandatory=$true, Position=1)][string]$TopicName
     )
@@ -276,7 +247,7 @@ function LK-Azure-GetTopicSubscriptionMessages
     [CmdletBinding()]
     param
     (
-        [ValidateSet('0dev','0load','0prod','0test','1dev','1load','1prod','1test')]
+        
         [parameter(Mandatory=$true, Position=0)][string]$locationEnvironment,
         [ValidateNotNullOrEmpty()][string]$topicName, 
         [ValidateNotNullOrEmpty()][string]$subscriptionName
@@ -289,11 +260,10 @@ function LK-getCosmosDoc
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('0dev','0load','0prod','0test','1dev','1load','1prod','1test')]
+        
         [parameter(Mandatory=$true, Position=0)][string]$locationEnvironment,
-        [ValidateSet('DomainEventsHistory','EGifts','EGiftOrders','EGiftOrderRequests','ExternalOrderIds','OrderQueryCounts','PaymentTokens')]
         [parameter(Mandatory=$true, Position=1)][string]$table,
-        [parameter(Mandatory=$true, Position=2)][string]$key = 'U3G35W4JS3735G52W2V80S23M1'
+        [parameter(Mandatory=$true, Position=2)][string]$key
     )
     $connectionString = ($global:settings.cosmosDbConnectionStrings).Where({ $_.Contains($locationEnvironment) });
     $context = global:azureGetCosmosContextByConnectionString $connectionString;
@@ -322,9 +292,8 @@ function LK-Azure-Login
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('s00197csubnpDPAPI1','s00197csubproddpapi2','s00197dsubsbdpsand')]
         [parameter(Mandatory=$false, Position=0)]
-        $subscription = 's00197dsubsbdpsand',
+        $subscription,
         [switch]$useAzureCredentialFileInsteadOfAskingForCredentialsInADialog = $false)
 
     try { Disconnect-AzureRmAccount -ErrorAction SilentlyContinue } catch {};
@@ -345,8 +314,8 @@ function LK-Azure-Login
     $profile = Select-AzureProfile -Default;
     Get-AzureSubscription -Profile $profile | Select-AzureSubscription ;
     $global:resourcesAndResourceGroups = (Get-AzureRmResource) | select Name,ResourceGroupName;
-    $global:nonProdSubscription        = Get-AzureRmSubscription -SubscriptionName s00197csubnpDPAPI1;
-    $global:prodSubscription           = Get-AzureRmSubscription -SubscriptionName s00197csubproddpapi2;
+    $global:nonProdSubscription        = Get-AzureRmSubscription -SubscriptionName sacsubnpDPAPI1;
+    $global:prodSubscription           = Get-AzureRmSubscription -SubscriptionName sacsubproddpapi2;
 }
 
 function LK-Azure-LoadSettings
@@ -540,15 +509,13 @@ function LK-Remove-Azure-Resource
     }
 }
 
-#[string]$connectionString, [string]$topicName, [string]$subscriptionName
-#'0dev','0loa','0tes','1dev','1loa','1tes','0pro','1pro',1tst
 function LK-peekTopicSubscription
 {
         [CmdletBinding()]
     param(
-        [ValidateSet('0dev','0load','0prod','0test','1dev','1load','1prod','1test')]
+        
         [parameter(Mandatory=$true,  Position=0)][string]$locationEnvironment,
-        [parameter(Mandatory=$false, Position=1)][string]$topicName        = 'egiftactivated',
+        [parameter(Mandatory=$false, Position=1)][string]$topicName        = 'parsactivated',
         [parameter(Mandatory=$false, Position=2)][string]$subscriptionName = 'defaultsubscription'
     )
     $connectionString = ($Global:settings.serviceBusConnectionStrings).Where({ $_.Contains($locationEnvironment)})
@@ -578,7 +545,6 @@ function LK-Cosmos-Connect
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('ocert', '0dev','0load','0prod','0test')]
         [parameter(Mandatory=$true,  Position=0)][string]$Environment
     )
     $connectionString = $global:settings.cosmosDbConnectionStrings | where { $_.Contains($Environment) };
@@ -655,7 +621,6 @@ function LK-Get-Cosmos-Gifting-Document
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('DomainEventsHistory','EGiftOrderRequests','EGiftOrders','EGifts','ExternalOrderIds','OrderQueryCounts','PaymentTokens')]
         [parameter(Mandatory=$true, Position=0)][string]$CollectionName,
         [parameter(Mandatory=$false, Position=1)][string]$Id
     )
@@ -950,20 +915,19 @@ function LK-getKeyVaultSecret
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('all', '0cert', '0dev','0load','0prod','0test','1cert','1dev','1load','1prod','1test')]
         [parameter(Mandatory=$true,  Position=0)][string]$locationEnvironment,
         [parameter(Mandatory=$false, Position=1)][string]$secretName       = 'serviceBusConnectionString'
     )
     if ($locationEnvironment -eq 'all')
     {
         $dic = @{};
-        if ($global:AzureAccount.Context.Subscription.Name -eq 's00197csubproddpapi2')
+        if ($global:AzureAccount.Context.Subscription.Name -eq 'sacsubpddpapi2')
         {
-            $envs = @('0prod', '1prod');
+            $envs = @('0pd', '1pd');
         }
         else
         {
-            $envs = @('0cert', '0dev','0load','0test','1cert','1dev','1load','1test');
+            $envs = @('0ct', '0dv','0load','0ts','1ct','1dv','1load','1ts');
         }
         foreach ($env in $envs)   
         {
@@ -975,8 +939,8 @@ function LK-getKeyVaultSecret
     else
     {
         $secrets = @{};
-        $secrets.Add('v1', (getSecret "s00293kvt$($locationEnvironment)egift"   $secretName));
-        $secrets.Add('v2', (getSecret "s00293kvt$($locationEnvironment)egiftv2" $secretName));
+        $secrets.Add('v1', (getSecret "uswkvt$($locationEnvironment)pars"   $secretName));
+        $secrets.Add('v2', (getSecret "uswkvt$($locationEnvironment)parsv2" $secretName));
         return $secrets;
     }
 }
@@ -985,9 +949,7 @@ function LK-setKeyVaultSecret
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('v1', 'v2')]
         [parameter(Mandatory=$true,  Position=0)][string]$Version,
-        [ValidateSet('all', '0cert', '0dev','0load','0prod','0test','1cert','1dev','1load','1prod','1test')]
         [parameter(Mandatory=$true,  Position=1)][string]$locationEnvironment,
         [parameter(Mandatory=$true,  Position=2)][string]$SecretName,
         [parameter(Mandatory=$true,  Position=3)][string]$SecretValue
@@ -997,7 +959,7 @@ function LK-setKeyVaultSecret
     {
         $v = '';
     }
-    $VaultName = "s00293kvt$($locationEnvironment)egift$v";
+    $VaultName = "uswkvt$($locationEnvironment)pars$v";
     $secretValueAsSecretString = ConvertTo-SecureString $SecretValue -AsPlainText -Force;
  
     Set-AzureKeyVaultSecret -VaultName $VaultName -Name $SecretName -SecretValue $secretValueAsSecretString;
@@ -1007,15 +969,14 @@ function LK-getVSTSVariables
 {
     [CmdletBinding()]
     param(
-        [ValidateSet('0cert', '0dev','0load','0prod','0test','1cert','1dev','1load','1prod','1test')]
         [string]$locationEnvironment)
     $lec  = $locationEnvironment.Substring(1) + $locationEnvironment[0];
     $lec  = $lec.Replace('0', 'East').Replace('1', 'West');
     $env  = $lec.Replace('East','').Replace('West','');
     $res  = @{};
-    $res  = global:flatObjectModelToDictionary $global:vstsVariables.'EGiftAPI-V2-CI-Invariants';
-    $res += global:flatObjectModelToDictionary $global:vstsVariables."EGiftAPI-V2-CI-LocationInvariants-$env";
-    $res += global:flatObjectModelToDictionary $global:vstsVariables."EGiftAPI-V2-CI-Variants-$lec";
+    $res  = global:flatObjectModelToDictionary $global:vstsVariables.'parsAPI-V2-CI-Invariants';
+    $res += global:flatObjectModelToDictionary $global:vstsVariables."parsAPI-V2-CI-LocationInvariants-$env";
+    $res += global:flatObjectModelToDictionary $global:vstsVariables."parsAPI-V2-CI-Variants-$lec";
     return (global:sortDictionaryByKey $res);
 }
 
@@ -1037,15 +998,15 @@ function LK-getLatestBuildArtifacts
 function setBackgroundColorAccordingToSubscription($sub)
 {
     $color = 'DarkCyan'
-    if ($sub -match 's00197csubnpDPAPI1')
+    if ($sub -match 'sacsubnpDPAPI1')
     {
         $color = 'DarkBlue';
     }
-    if ($sub -match 's00197csubproddpapi2')
+    if ($sub -match 'sacsubpddpapi2')
     {
         $color = 'DarkGreen';
     }
-    if ($sub -match 's00197dsubsbdpsand')
+    if ($sub -match 'sadsubsbdpsand')
     {
         $color = 'Black';
     }
@@ -1059,8 +1020,7 @@ function prompt
 {
     write-host '---------------------------------------------------------------------------------------------------' -ForegroundColor DarkYellow;
     $now = get-date;
-    #$cb  = "Xuxu";
-    #$global:retrieveGitInfoJob = Start-Job { retrieveGitInfo $_ } -InputObject $host.ui.RawUI;
+
     $cb = global:getCurrentBranch;
     $gi = retrieveGitInfo $cb;
     $azureSubscription = 'notConnectedToAzure';
@@ -1069,11 +1029,10 @@ function prompt
         $azureSubscription = $global:azureAccount.Context.Subscription.Name;
     }
     setBackgroundColorAccordingToSubscription $azureSubscription;
-#
+
     $elapsed = (($now - $global:LatestPrompt).TotalSeconds -as [int]).ToString().PadLeft(5);
     $global:LatestPrompt = $now;
     
-#    Write-Host $color -ForegroundColor $color;
     $color = 'Yellow';
     if ($gi -cmatch 'Chg:  0 Unt:  0') { $color = 'Green' }
     Write-Host $gi -ForegroundColor ($color) -NoNewline;
@@ -1084,4 +1043,4 @@ function prompt
     Write-Host " $PWD" -ForegroundColor Cyan;
     return '] ';
 }
-#elapsedTime 85;
+

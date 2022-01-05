@@ -1,7 +1,7 @@
 ﻿param(
-    $correctReleaseJsonFileName               = 'C:\temp\eGift.Infrastructure.Develop.Release.json', 
+    $correctReleaseJsonFileName               = 'C:\temp\pars.Infrastructure.Develop.Release.json', 
     $nameOfCorrectlyRunningEnvironment        = 'TestEast', 
-    $toBeVerifiedReleaseJsonFileName          = 'C:\temp\eGift.Infrastructure.Master.Release.json')
+    $toBeVerifiedReleaseJsonFileName          = 'C:\temp\pars.Infrastructure.Master.Release.json')
 
 if ($global:allSPNs -eq $null)
 {

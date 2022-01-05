@@ -11,8 +11,8 @@
 ]
 "@ | ConvertFrom-Json;
 
-Write-Host 'Retrieving all Egift*-Variants-* variable groups.' -ForegroundColor Green;
-$allVariableGroups = (LK-Tool-GetVariableGroups -variableGroupFilter 'Egift*Variants*') | ConvertFrom-Json;
+Write-Host 'Retrieving all pars*-Variants-* variable groups.' -ForegroundColor Green;
+$allVariableGroups = (LK-Tool-GetVariableGroups -variableGroupFilter 'pars*Variants*') | ConvertFrom-Json;
 $groupNames = (Get-Member -InputObject $allVariableGroups -MemberType NoteProperty).Name;
 $allVariables = @{};
 $valueToGroupAndVariableMap = @{};
@@ -36,7 +36,7 @@ foreach ($groupName in $groupNames)
 #$allApplicationInsights = Get-AzureRmApplicationInsights;
 #$allKeyVaults = Get-AzureRmKeyVault;
 #$allCosmosDb = (Get-AzureRmResource) | where { $_.Kind -match 'GlobalDocumentDB' };
-Write-Host 'Retrieving all s00293 resources.' -ForegroundColor Green;
+Write-Host 'Retrieving all usw resources.' -ForegroundColor Green;
 $rrgs = get-azurermresource | select ResourceGroupName, Name | where { $valueToGroupAndVariableMap.ContainsKey($_.Name) };
 
 foreach ($rrg in $rrgs)

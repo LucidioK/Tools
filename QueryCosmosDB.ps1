@@ -74,11 +74,11 @@ Function Query-CosmosDb
 # fill the target cosmos database endpoint uri, database id, collection id and masterkey
 $CosmosDBEndPoint = "https://DBNAME.documents.azure.com:443/"
 $DatabaseId = "DBNAME"
-$CollectionId = "EGiftOrderRequests"
+$CollectionId = "parsOrderRequests"
 $MasterKey = "MASTERKEY"
 
 # query string
-$Query = "SELECT * FROM EGiftOrderRequests"
+$Query = "SELECT * FROM parsOrderRequests"
 
 # execute
 Query-CosmosDb -EndPoint $CosmosDBEndPoint -DataBaseId $DataBaseId -CollectionId $CollectionId -MasterKey $MasterKey -Query $Query

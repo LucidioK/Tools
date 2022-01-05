@@ -8,7 +8,7 @@
 ) 
 
 #example:
-# .\TestARMTemplate.ps1 -TemplateFile C:\dsv\egift.infrastructure\ARMTemplates\keyVaultTemplate.json -TemplateParametersFile C:\dsv\egift.infrastructure\ARMTemplates\keyVaultTemplate.parameters.json -ResourceGroupName s00293nrgp1loadegiftv2kv -ResourceBeingDeployedName s00293kvt1loadegiftv2
+# .\TestARMTemplate.ps1 -TemplateFile C:\dsv\pars.infrastructure\ARMTemplates\keyVaultTemplate.json -TemplateParametersFile C:\dsv\pars.infrastructure\ARMTemplates\keyVaultTemplate.parameters.json -ResourceGroupName uswnrgp1loadparsv2kv -ResourceBeingDeployedName uswkvt1loadparsv2
 
 function deleteExistingResourcesFromResourceGroup($resourceGroupName)
 {

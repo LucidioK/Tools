@@ -12,7 +12,7 @@
 #  so you better follow these steps to have it properly formatted:
 #   a. Run the script, save it to another file, for instance:
 #
-#      (.\createNewApplicationInsightsChartsForFunction.ps1 -applicationInsightsTemplateJsonFilePath 'C:\MYSOURCES\egiftazure\Deployment\appinsights\appInsightsEGiftFnHealthOverviewDeploy.json' -functionName RefundOrderForPayPal) | Out-File 'c:\temp\refund.json'
+#      (.\createNewApplicationInsightsChartsForFunction.ps1 -applicationInsightsTemplateJsonFilePath 'C:\MYSOURCES\parsazure\Deployment\appinsights\appInsightsparsFnHealthOverviewDeploy.json' -functionName RefundOrderForPayPal) | Out-File 'c:\temp\refund.json'
 #      
 #      At the end of the script execution, it will say where the new charts were inserted, for instance:
 #
@@ -32,7 +32,7 @@
 #   h. After code review, merge it and run the release.
 #
 param(
-    [string]$applicationInsightsTemplateJsonFilePath = 'C:\dsv\egiftazure\Deployment\appinsights\appInsightsEGiftFnHealthOverviewDeploy.json',
+    [string]$applicationInsightsTemplateJsonFilePath = 'C:\dsv\parsazure\Deployment\appinsights\appInsightsparsFnHealthOverviewDeploy.json',
     [string]$functionName = 'CreateOrderForPayPal'
 )
 

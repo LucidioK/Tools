@@ -255,8 +255,8 @@ function logglyFieldsApi
         {
 	        "json": {
 		        "Exception": {
-			        "StackTrace": "   at Amazon.Runtime.Internal.HttpErrorResponseExceptionHandler.HandleException(IExecutionContext executionContext, HttpErrorResponseException exception)\r\n   at Amazon.Runtime.Internal.ErrorHandler.ProcessException(IExecutionContext executionContext, Exception exception)\r\n   at Amazon.Runtime.Internal.ErrorHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.RetryHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.ErrorCallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.MetricsHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.RuntimePipeline.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.AmazonServiceClient.Invoke[TRequest,TResponse](TRequest request, IMarshaller`2 marshaller, ResponseUnmarshaller unmarshaller)\r\n   at Amazon.Kinesis.AmazonKinesisClient.GetShardIterator(GetShardIteratorRequest request)\r\n   at PlayStreamConsumer.PlayStreamReader.GetShardIterator(String streamName, String shardId, String afterSequenceId) in Z:\\jenkins-slave-vertical\\workspace\\update-application\\Server\\PlayStreamConsumer\\PlayStreamReader.cs:line 190\r\n   at PlayStreamProcessor.ShardProcessorBase.SetStartingPoint(String streamName) in Z:\\jenkins-slave-vertical\\workspace\\update-application\\Server\\PlayStreamProcessor\\ShardProcessor.cs:line 336\r\n   at PlayStreamProcessor.VerticalShardProcessor.RunUntilCancelled() in Z:\\jenkins-slave-vertical\\workspace\\update-application\\Server\\PlayStreamProcessor\\ShardProcessor.cs:line 490\r\n   at LK.PlayStream.Processor.VerticalStreamProcessor.\u003c\u003ec__DisplayClass27_0.\u003cTryProcessShardToCompletionAsync\u003eb__0() in Z:\\jenkins-slave-vertical\\workspace\\update-application\\Server\\PlayStreamProcessor\\StreamProcessManager.cs:line 339\r\n   at System.Threading.Tasks.Task.Execute()",
-			        "Message": "Rate exceeded for shard shardId-000000000000 in stream spi-playstream_live under account 773275573528.",
+			        "StackTrace": . . .,
+			        "Message": "Rate exceeded for shard . . .",
 			        "Type": "Amazon.Kinesis.Model.ProvisionedThroughputExceededException",
 			        "InnerExceptions": [{
 					        "StackTrace": "   at Amazon.Runtime.Internal.HttpRequest.GetResponse()\r\n   at Amazon.Runtime.Internal.HttpHandler`1.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.Unmarshaller.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.ErrorHandler.InvokeSync(IExecutionContext executionContext)",
@@ -323,19 +323,7 @@ function logglyFieldsApi
 .EXAMPLE
   Loggly-Search -terms '*' -format csv -from -1h
   "19-03-11 21:03:38.162 -00:00","","a29e466","main","playstreameventanonymizer","34.213.208.16"
-"19-03-11 21:03:38.162 -00:00","{'StackTrace': '   at Amazon.Runtime.Internal.HttpErrorResponseExceptionHandler.HandleException(IExecutionContext executionContext, HttpErrorResponseException exception)\r\n   at Amazon.Runtime.Internal.ErrorHandler.ProcessExc
-eption(IExecutionContext executionContext, Exception exception)\r\n   at Amazon.Runtime.Internal.ErrorHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n  
- at Amazon.Runtime.Internal.RetryHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.CallbackHandler.InvokeSync(IExecutionCont
-ext executionContext)\r\n   at Amazon.Runtime.Internal.ErrorCallbackHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.MetricsHandler.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.Runtime
-Pipeline.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.AmazonServiceClient.Invoke[TRequest,TResponse](TRequest request, IMarshaller`2 marshaller, ResponseUnmarshaller unmarshaller)\r\n   at Amazon.SimpleNotificationService.AmazonSimp
-leNotificationServiceClient.Publish(PublishRequest request)\r\n   at LK.Services.PushNotificationService.SendMessage(PublishRequest publishRequest, UInt64 notificationRecipient, UInt64 titleId, String pushNotificationTemplateId, String language) in Z:\\
-master-node-workspace@2\\Server\\UberNetServices\\PushNotificationService.cs:line 696', 'Message': 'Invalid parameter: TargetArn Reason: No endpoint found for the target arn specified', 'Type': 'Amazon.SimpleNotificationService.Model.InvalidParameterExceptio
-n', 'InnerExceptions': [{'StackTrace': '   at Amazon.Runtime.Internal.HttpRequest.GetResponse()\r\n   at Amazon.Runtime.Internal.HttpHandler`1.InvokeSync(IExecutionContext executionContext)\r\n   at Amazon.Runtime.Internal.Unmarshaller.InvokeSync(IExecutionC
-ontext executionContext)\r\n   at Amazon.Runtime.Internal.ErrorHandler.InvokeSync(IExecutionContext executionContext)', 'Message': 'The remote server returned an error: (400) Bad Request.', 'Type': 'Amazon.Runtime.Internal.HttpErrorResponseException', 'Inner
-Exceptions': [{'StackTrace': '   at System.Net.HttpWebRequest.GetResponse()\r\n   at Amazon.Runtime.Internal.HttpRequest.GetResponse()', 'Message': 'The remote server returned an error: (400) Bad Request.', 'Type': 'System.Net.WebException'}]}]}","a29e466","
-main","queueprocessor","52.13.201.178"
-"19-03-11 21:03:38.157 -00:00","","92e7c33","main","logicserver","34.216.170.167"
-"19-03-11 21:03:38.157 -00:00","","92e7c33","main","logicserver","34.216.170.167"
+"19-03-11 21:03:38.162 -00:00",". . .
 
 .EXAMPLE
     Loggly-Search -terms '*' -format csv -from -15s -jsonLevel * -size 10 -columns 'json.Application,json.Cloud,http.clientHost,json.Exception,json.Commit,json.Level'
@@ -356,7 +344,7 @@ main","queueprocessor","52.13.201.178"
     Loggly-Search -terms '*' -format json -from -2d -jsonLevel Error -size 10 -columns '*'
     [
         {
-            "http_clientHost":  "35.155.163.197",
+            "http_clientHost":  "1.2.3.4",
             "http_contentType":  "application/json; charset=utf-8",
             "json_Application":  "playstreamarchiver",
             "json_Cloud":  "spi",
@@ -364,151 +352,13 @@ main","queueprocessor","52.13.201.178"
             "json_Ec2InstanceId":  "i-08aa975df4ca62856",
             "json_Level":  "Information",
             "json_Logger":  "ServiceActivatorBase",
-            "json_Message":  "\"Deactivated service. LockName: spi-playstream_live_shardId-000000000000. ResourceId: event_archiver. ClientId: i-08aa975df4ca62856_SOME_GUID. VerticalStatus (Cloud: spi Region: us-west-2 SharedRegion: us
-    -west-2 Vertical: spi Application: playstreamarchiver Commit: 451edda IsPrivateCloud: True). Instance = i-08aa975df4ca62856. Ready = False\"",
+            "json_Message":  "\"Deactivated service. . . .",
             "json_ThreadName":  "49",
             "json_timestamp":  "2019-03-11T21:09:02.5566489+00:00",
             "json_Vertical":  "spi"
         },
         {
-            "http_clientHost":  "35.155.163.197",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "playstreamarchiver",
-            "json_Cloud":  "spi",
-            "json_Commit":  "451edda",
-            "json_Ec2InstanceId":  "i-08aa975df4ca62856",
-            "json_Level":  "Information",
-            "json_Logger":  "ServiceActivatorBase",
-            "json_Message":  "\"Activated service. LockName: spi-playstream_live_shardId-000000000000. ResourceId: event_archiver. ClientId: i-08aa975df4ca62856_SOME_GUID. VerticalStatus (Cloud: spi Region: us-west-2 SharedRegion: us-w
-    est-2 Vertical: spi Application: playstreamarchiver Commit: 451edda IsPrivateCloud: True). Instance = i-08aa975df4ca62856. Ready = True.\"",
-            "json_ThreadName":  "9",
-            "json_timestamp":  "2019-03-11T21:09:02.5254331+00:00",
-            "json_Vertical":  "spi"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-0efab65791c101d0f",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Loading 1 scripts into engine 197489 for title A4B5 revision 3\"",
-            "json_ThreadName":  "137",
-            "json_timestamp":  "2019-03-11T21:09:00.5789658+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-0efab65791c101d0f",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Initializing engine for title A4B5 revision 3\"",
-            "json_ThreadName":  "137",
-            "json_timestamp":  "2019-03-11T21:09:00.5633318+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-0efab65791c101d0f",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Making engine 197489 for title A4B5 revision 3\"",
-            "json_ThreadName":  "137",
-            "json_timestamp":  "2019-03-11T21:09:00.5633318+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "gamemanager",
-            "json_Cloud":  "main",
-            "json_Commit":  "92e7c33",
-            "json_Ec2InstanceId":  "i-0b07175a2083c0fe8",
-            "json_Level":  "Debug",
-            "json_Logger":  "ProfileClient",
-            "json_Message":  "\"Search Request Completed Debug: Successful low level call on POST: /combined-profiles/_search# Audit trail of this API call: - [1] HealthyResponse: Node: http://10.0.2.100:9200/ Took: 00:00:00.0156288# Request:\u003cRequest stream
-     not captured or already read to completion by serializer. Set DisableDirectStreaming() on ConnectionSettings to force it to be set on the response.\u003e# Response:\u003cResponse stream not captured or already read to completion by serializer. Set DisableDi
-    rectStreaming() on ConnectionSettings to force it to be set on the response.\u003e Audit: [{\\\"Event\\\":10,\\\"Started\\\":\\\"2019-03-11T21:09:00.3014595Z\\\",\\\"Ended\\\":\\\"2019-03-11T21:09:00.3170883Z\\\",\\\"Node\\\":{\\\"Uri\\\":\\\"http://10.0.2.1
-    00:9200/\\\",\\\"IsResurrected\\\":false,\\\"HttpEnabled\\\":true,\\\"HoldsData\\\":true,\\\"MasterEligible\\\":true,\\\"IngestEnabled\\\":true,\\\"MasterOnlyNode\\\":false,\\\"ClientNode\\\":false,\\\"Id\\\":\\\"q5H_TRJKR5KwgS0Nby7t6w\\\",\\\"Name\\\":\\\"i
-    -0ea1369b50de6c6bd\\\",\\\"Settings\\\":{\\\"bootstrap.memory_lock\\\":\\\"true\\\",\\\"client.type\\\":\\\"node\\\",\\\"cloud.aws.region\\\":\\\"us-west-2\\\",\\\"cloud.node.auto_attributes\\\":\\\"true\\\",\\\"cluster.name\\\":\\\"playstream_profiles\\\",\
-    \\"cluster.routing.allocation.awareness.attributes\\\":\\\"aws_availability_zone\\\",\\\"discovery.ec2.groups.0\\\":\\\"sg-bda30fc5\\\",\\\"discovery.ec2.host_type\\\":\\\"private_ip\\\",\\\"discovery.zen.hosts_provider\\\":\\\"ec2\\\",\\\"discovery.zen.mini
-    mum_master_nodes\\\":\\\"2\\\",\\\"discovery.zen.ping_timeout\\\":\\\"5s\\\",\\\"http.port\\\":\\\"9200\\\",\\\"http.type.default\\\":\\\"netty4\\\",\\\"network.host\\\":\\\"0.0.0.0\\\",\\\"network.publish_host\\\":\\\"_ec2:publicDns_\\\",\\\"node.attr.aws_a
-    vailability_zone\\\":\\\"us-west-2c\\\",\\\"node.name\\\":\\\"i-0ea1369b50de6c6bd\\\",\\\"path.conf\\\":\\\"/etc/elasticsearch\\\",\\\"path.data.0\\\":\\\"/mnt\\\",\\\"path.home\\\":\\\"/usr/share/elasticsearch\\\",\\\"path.logs\\\":\\\"/var/log/elasticsearc
-    h\\\",\\\"pidfile\\\":\\\"/var/run/elasticsearch/elasticsearch.pid\\\",\\\"thread_pool.bulk.queue_size\\\":\\\"5000\\\",\\\"transport.tcp.port\\\":\\\"9300\\\",\\\"transport.type.default\\\":\\\"netty4\\\",\\\"xpack.security.enabled\\\":\\\"false\\\"},\\\"Fa
-    iledAttempts\\\":0,\\\"DeadUntil\\\":\\\"0001-01-01T00:00:00\\\",\\\"IsAlive\\\":true},\\\"Path\\\":\\\"combined-profiles/_search\\\",\\\"Exception\\\":null}]\"",
-            "json_ThreadName":  "80",
-            "json_timestamp":  "2019-03-11T21:09:00.3170883+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "52.13.201.178",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-03a0e4bfaeacae724",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Initializing engine for title 7E43A92 revision 1\"",
-            "json_RequestId":  "003a628d393b4b36bf5f1694619c1c3d",
-            "json_ThreadName":  "74",
-            "json_timestamp":  "2019-03-11T21:09:00.2180104+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.213.208.16",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "playstreamrelaypublisher",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-03a52beccbd5e4bf4",
-            "json_Level":  "Warning",
-            "json_Logger":  "RelayPublisher",
-            "json_Message":  "\"Event is not EntityCustomEventData and will have null OriginalTimestamp, OriginalEventId and PublisherEntityKey fields. EventNamespace: com.LK EventName: entity_logged_in, EntityId :title_player_account!FC0E99D0DF2B1B2D Type:
-     (PlayStreamEvents.LKEvents.EntityLoggedInEventData\"",
-            "json_ThreadName":  "16",
-            "json_timestamp":  "2019-03-11T21:09:00.1097769+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-0efab65791c101d0f",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Loading 1 scripts into engine 197488 for title 87D3 revision 654\"",
-            "json_RequestId":  "78b700796ada41fe91730cfb100b11b4",
-            "json_ThreadName":  "16",
-            "json_timestamp":  "2019-03-11T21:08:59.8902466+00:00",
-            "json_Vertical":  "master"
-        },
-        {
-            "http_clientHost":  "34.216.170.167",
-            "http_contentType":  "application/json; charset=utf-8",
-            "json_Application":  "logicserver",
-            "json_Cloud":  "main",
-            "json_Commit":  "a29e466",
-            "json_Ec2InstanceId":  "i-0efab65791c101d0f",
-            "json_Level":  "Debug",
-            "json_Logger":  "ScriptEngineManager",
-            "json_Message":  "\"Initializing engine for title 87D3 revision 654\"",
-            "json_RequestId":  "78b700796ada41fe91730cfb100b11b4",
-            "json_ThreadName":  "16",
-            "json_timestamp":  "2019-03-11T21:08:59.8902466+00:00",
-            "json_Vertical":  "master"
+. . . 
         }
     ]
 
@@ -747,24 +597,12 @@ function Loggly-GetFieldValueCount
 .EXAMPLE
     Loggly-GetFieldValues -from '-2h' -fieldName json.Cloud
     main
-    spi
-    analytics
-    player-svcs
-    devservices
-    rblx
-    matchmaking
-    upr-usj
-    upr-ush
-    gamemgr
-    multiplayer
-    data-svcs
-    serendipity
-    china
-    prod.corematch.xboxlive.com     
+    something else
+. . .    
 
 .EXAMPLE
      Loggly-GetFieldValues -from '-2d' -fieldName json.Cloud -filter 'json.Level:"Error" json.QueueName:"release_queue_v2"'
-    prod.corematch.xboxlive.com       
+          
 #>
 function Loggly-GetFieldValues 
 {

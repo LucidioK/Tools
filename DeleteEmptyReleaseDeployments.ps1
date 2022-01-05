@@ -1,5 +1,5 @@
 ﻿
-param($releaseDefinitionName = 'eGift.Infrastructure.Develop.Release')
+param($releaseDefinitionName = 'pars.Infrastructure.Develop.Release')
 if ((get-command -Name 'Add-TeamAccount') -eq $null)
 {
     Save-Module -Name Team  -Path C:\temp\PowerShell;

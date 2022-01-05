@@ -964,14 +964,14 @@ function global:executeWithExceptionHandling([ScriptBlock]$script)
 }
 
 function global:initializeVSS(
-    [string]$path = 'C:\dsv\egift.infrastructure\GetVariableGroups\bin\Debug', 
-    [string]$vsURI = '"https://sbux-dpapi.visualstudio.com',
-    [string]$personalToken = 'sjd4xntbzqo6c2w4qpt5itaqzkrequd3wo4yv4zmrvkib54rlt2a')
+    [string]$path, 
+    [string]$vsURI,
+    [string]$personalToken)
 {
     $global:vssPersonalToken = $personalToken;
     pushd .
     cd $path;
-    $dlls = (Get-ChildItem -path 'C:\dsv\egift.infrastructure\GetVariableGroups\bin\Debug' -Filter '*.dll').FullName;
+    $dlls = (Get-ChildItem -path $path -Filter '*.dll').FullName;
     foreach ($dll in $dlls) { [System.Reflection.Assembly]::LoadFile($dll); }
     $cred = [Microsoft.VisualStudio.Services.Common.VssBasicCredentials]::new('', $personalToken);
     
