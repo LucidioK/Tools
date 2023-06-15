@@ -13,7 +13,7 @@ $connector     = new-object system.data.oledb.oledbdataadapter -argument $sql, $
 $dataset       = new-object system.data.dataset 
 $result        = if ($connector.fill($dataset)) { $dataset.tables[0] }
 
-if ($result -ne $null)
+if ($null -ne $result)
 {
     $filePaths = ($result)."System.ItemPathDisplay";
     foreach ($filePath in $filePaths) {

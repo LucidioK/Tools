@@ -39,13 +39,13 @@ function getDerives([object]$tp)
     if ($tp.Body[$m.Index + $m.Length] -eq ':')
     {
         $derives = [Regex]::new('.*?{').Match($tp.Body.Substring($m.Index + $m.Length + 1)).Value.Replace(' ','').Replace('{','');
-        $derives = $derives | foreach { $_.Substring($_.LastIndexOf('.')+1) }
-        $templateTypes = $derives | where { $_.Contains('<') };
+        $derives = $derives | ForEach-Object { $_.Substring($_.LastIndexOf('.')+1) }
+        $templateTypes = $derives | Where-Object { $_.Contains('<') };
         if ($templateTypes)
         {
             $templateTypes |
-            where { $_.Contains('<') } | 
-            foreach {
+            Where-Object { $_.Contains('<') } | 
+            ForEach-Object {
                 $positionLastOpeningBracket = $_.LastIndexOf('<');
                 $positionClosingBracket     = $_.IndexOf('>', $positionLastOpeningBracket);
                 $internalTypeName           = $_.Substring($positionLastOpeningBracket+1, $positionClosingBracket - $positionLastOpeningBracket - 1);
@@ -63,9 +63,9 @@ function getDerives([object]$tp)
 function getDerivesFrom([object]$tp, [object[]]$types)
 {
     $derives = getDerives $tp;
-    if ($derives -ne $null)
+    if ($null -ne $derives)
     {
-        return (($types | where { $derives.Contains($_.Name) }).Name);
+        return (($types | Where-Object { $derives.Contains($_.Name) }).Name);
     }
 
     return $null;
@@ -74,8 +74,8 @@ function getDerivesFrom([object]$tp, [object[]]$types)
 function getReferences([object]$tp, [object[]]$types)
 {
     $code = $tp.Body.Substring($tp.Body.IndexOf('{'));
-    $otherTypeNames = ($types | where { $_.Name -ne $tp.Name }).Name;
-    $pattern = [string]::Join('|', ($otherTypeNames | foreach { "[^A-Za-z0-9_<>]$($_)[^A-Za-z0-9_<>]" }));
+    $otherTypeNames = ($types | Where-Object { $_.Name -ne $tp.Name }).Name;
+    $pattern = [string]::Join('|', ($otherTypeNames | ForEach-Object { "[^A-Za-z0-9_<>]$($_)[^A-Za-z0-9_<>]" }));
     $ms = [Regex]::new($pattern).Matches($code);
     $refs = @();
     foreach ($m in $ms)
@@ -84,10 +84,10 @@ function getReferences([object]$tp, [object[]]$types)
         $refs += $typeName;
     }
 
-    return ($refs | sort -Unique);
+    return ($refs | Sort-Object -Unique);
 }
 
-$allCsCode  = ""; (get-childitem -Path . -Filter '*.cs' -Recurse).FullName | foreach { $c = gc $_ -Raw; $allCsCode += $c; }
+$allCsCode  = ""; (get-childitem -Path . -Filter '*.cs' -Recurse).FullName | ForEach-Object { $c = Get-Content $_ -Raw; $allCsCode += $c; }
 $allCsCode2 = codeCleanup $allCsCode;
 $ms = [Regex]::new("(class|interface) ([A-Z][A-Za-z0-9_<>]*)").Matches($allCsCode2);
 $types = @();
@@ -101,12 +101,11 @@ foreach ($m in $ms)
     $types += $tp;
 }
 
-$types = $types | sort -Property Name -Unique;
+$types = $types | Sort-Object -Property Name -Unique;
 
 foreach ($tp in $types)
 {
     $tp.DerivesFrom = (getDerivesFrom $tp $types);
-    #$tp.Implements  = (getDerivesFrom $tp ($types | where { $_.Kind -eq 'interface' }));
     $tp.References  = (getReferences  $tp $types);
 }
 return $types;

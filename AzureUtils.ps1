@@ -1,5 +1,5 @@
-﻿pushd .
-cd $PSScriptRoot
+﻿Push-Location .
+Set-Location $PSScriptRoot;
     $requiredDlls = @(
         "Microsoft.WindowsAzure.Storage.dll",
         "Microsoft.Data.Services.Client.dll",
@@ -17,7 +17,7 @@ cd $PSScriptRoot
     {
         [System.Reflection.Assembly]::LoadFile((Join-Path $PSScriptRoot $dll)) | Out-Null;
     }
-popd
+Pop-Location;
 
 # ----------------- Az module compatible below
 
@@ -37,7 +37,7 @@ function Get-AzCachedAccessToken()
     $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile);
     Write-Debug ("Getting access token for tenant" + $currentAzureContext.Tenant.TenantId);
     $token = $profileClient.AcquireAccessToken($currentAzureContext.Tenant.TenantId);
-    $token.AccessToken
+    $token.AccessToken;
 }
 
 function Get-AzBearerToken()
@@ -150,7 +150,7 @@ function global:getBuildArtifacts([string]$accessToken, [string]$vstsProjectUri,
 
 function global:azureInstallCosmosDBIfNeeded()
 {
-    if ((Get-Module -Name 'CosmosDB') -eq $null)
+    if ($null -eq (Get-Module -Name 'CosmosDB'))
     {
         Install-Module -Name CosmosDB;
     }
@@ -280,7 +280,7 @@ function global:azureAddSubscriptionFilter([Microsoft.ServiceBus.Messaging.Subsc
 
 function global:azureReceiveServiceBusTopicMessage()
 {
-    if ($global:azureReceiveServiceBusTopicMessageReceiveMessageDefined -eq $null)
+    if ($null -eq $global:azureReceiveServiceBusTopicMessageReceiveMessageDefined)
     {
         $class = @"
 namespace azureReceiveServiceBusTopicMessage6
@@ -314,7 +314,7 @@ function global:getAzureStorageTable([string]$resourceGroup,[String]$databaseNam
 {
     $keys = Invoke-AzureRmResourceAction -Action listKeys -ResourceType "Microsoft.DocumentDb/databaseAccounts" -ApiVersion "2015-04-08" -ResourceGroupName $resourceGroup -Name $databaseName -Force;
 
-    if ($keys -eq $null)
+    if ($null -eq $keys)
     {
         throw "Cosmos DB Database $databaseName didn't return any keys.";
     }
@@ -328,7 +328,7 @@ function global:getAzureStorageTable([string]$resourceGroup,[String]$databaseNam
     #[Microsoft.WindowsAzure.Storage.Table.CloudTable]$table = [Microsoft.WindowsAzure.Storage.Table.CloudTable]$tableClient.GetTableReference($tableName);
     $table = $tableClient.GetTableReference($tableName);
 
-    if ($table -eq $null)
+    if ($null -eq $table)
     {
         throw "Table $tableName could not be retrieved from Cosmos DB database name $databaseName on resource group $resourceGroupName";
     }
@@ -343,7 +343,6 @@ function global:queryCosmosDb(
         [String]$MasterKey,  
         [String]$Query = 'select * from Root') 
 {
-    $ResourceType = "docs"; 
     $ResourceLink = "dbs/$DatabaseId/colls/$CollectionId" 
  
     $dateTime = [DateTime]::UtcNow.ToString("r") 
@@ -356,10 +355,6 @@ function global:queryCosmosDb(
     $result = Invoke-RestMethod -Method "POST" -ContentType $contentType -Uri $queryUri -Headers $header -Body $queryJson ;
  
     $result | ConvertTo-Json -Depth 10 
-<#
-    [Void][Reflection.Assembly]::LoadWithPartialName('Microsoft.Azure.DocumentDB');
-    $reader = [Microsoft.Azure.Documents.Client.DocumentClient]::new($EndPoint, $MasterKey);
-#>
 }
 
 Function global:generateMasterKeyAuthorizationSignature 
@@ -401,7 +396,7 @@ function global:addType([string]$classDefinition, [string]$classFullName, [strin
         }
         if (-not ($classFullName -as [type]))
         {
-            if ($referencedAssemblies -eq $null -or $referencedAssemblies.Count -eq 0)
+            if ($null -eq $referencedAssemblies -or $referencedAssemblies.Count -eq 0)
             {
                 add-type -TypeDefinition $class -IgnoreWarnings -OutputAssembly $outputAssembly;
             }
@@ -415,7 +410,7 @@ function global:addType([string]$classDefinition, [string]$classFullName, [strin
 
 function global:importModuleIfNeeded([ValidateNotNullOrEmpty()][string]$moduleName)
 {
-    if ($global:importedModulesInImportModuleIfNeeded -eq $null)
+    if ($null -eq $global:importedModulesInImportModuleIfNeeded)
     {
         $global:importedModulesInImportModuleIfNeeded = @();
     }
@@ -426,7 +421,7 @@ function global:importModuleIfNeeded([ValidateNotNullOrEmpty()][string]$moduleNa
     $start = get-date;
     $gm = Get-Module -Name $moduleName;
     $job = $null;
-    if ($gm -eq $null)
+    if ($null -eq $gm)
     {
         Write-Host "Importing module $moduleName,this might take some time..." -ForegroundColor Green;
         $job = Start-Job { Import-Module -Name $moduleName };
@@ -444,7 +439,7 @@ function global:importModules([string[]]$moduleNames)
     foreach ($moduleName in $moduleNames)
     {
         $job = global:importModuleIfNeeded $moduleName;
-        if ($job -ne $null)
+        if ($null -ne $job)
         {
             $jobs = $jobs + $job;
         }
@@ -455,7 +450,7 @@ function global:importModules([string[]]$moduleNames)
 function global:importAzureModules()
 {
     Write-Host "Importing modules..." -ForegroundColor Green;
-    $global:ImportAzureModulesJobs = global:importModules (
+    global:importModules (
         'Azure',
         'Azure.Storage',
         'AzureRM',
@@ -464,7 +459,7 @@ function global:importAzureModules()
         'AzureRM.ServiceBus',
         'AzureRm.ApiManagement',
         'AzureRm.Storage',
-        'AzureRmStorageTable');
+        'AzureRmStorageTable') | Out-Null;
     Import-Module (join-path $PSScriptRoot 'Microsoft.ServiceBus.dll');
     Write-Host "Done with importing modules." -ForegroundColor Green;
 }
@@ -472,7 +467,7 @@ function global:importAzureModules()
 function global:azureLoginIfNeeded([ValidateNotNullOrEmpty()][string]$subscription = $global:settings.subscription) 
 {
     $loggedIn = $false;
-    if ($global:AzureAccount -eq $null)  
+    if ($null -eq $global:AzureAccount)  
     {
         try
         {
@@ -508,7 +503,7 @@ function global:azureLoginIfNeeded([ValidateNotNullOrEmpty()][string]$subscripti
 
 function global:azurePopulateResourceResourceGroupIfNeeded()
 {
-    if ($global:resourceResourceGroup -eq $null)
+    if ($null -eq $global:resourceResourceGroup)
     {
         $global:resourceResourceGroup = @{};
         $rs=Get-AzureRmResource;
@@ -521,7 +516,7 @@ function global:azurePopulateResourceResourceGroupIfNeeded()
 
 function global:azureConnectToServiceBus([ValidateNotNullOrEmpty()][string]$serviceBusConnectionString, [ValidateNotNullOrEmpty()][string]$deadLetterQueueName)
 {
-    if ($Global:AzureNamespaceManager -eq $null) 
+    if ($null -eq $Global:AzureNamespaceManager) 
     { 
         try
         {
@@ -536,7 +531,9 @@ function global:azureConnectToServiceBus([ValidateNotNullOrEmpty()][string]$serv
             global:azurePopulateResourceResourceGroupIfNeeded;
             $global:serviceBusNamespace = global:extractWithRegex $global:AzureNamespaceManager.Address.ToString() '.*?([A-Za-z_0-9]+)\.servicebus';
             $global:serviceBusResourceGroup = $global:resourceResourceGroup[$global:serviceBusNamespace];
-            Write-Host "Connected to Azure Service Bus $($global:serviceBusNamespace) on resource group $($global:serviceBusResourceGroup) `n" -ForegroundColor Green;
+            Write-Host "Connected to Azure Service Bus $($global:serviceBusNamespace) on resource group $($global:serviceBusResourceGroup).`n" -ForegroundColor Green;
+            Write-Host "Messaging Factory points to $($Global:AzureMessagingFactory.Address). `n" -ForegroundColor Green;
+            Write-Host "Dead Letter Queue points to $($Global:AzureDeadLetterQueueClient.Path). `n" -ForegroundColor Green;
         }
         catch
         {
@@ -556,11 +553,12 @@ function global:azureCreateTopicClient([ValidateNotNullOrEmpty()][string]$topicN
     try
     {
         $topic = Get-AzureRmServiceBusTopic -ResourceGroupName $global:serviceBusResourceGroup -Namespace $global:serviceBusNamespace -Name $topicName;
-        if ($topic -eq $null)
+        if ($null -eq $topic)
         {
             throw "Topic $topicName does not exist."
         }
         $global:TopicClient = $Global:AzureMessagingFactory.CreateTopicClient($topicName);
+        Write-Host "Created topic client for $topicName, with path $($global:TopicClient.Path)." -ForegroundColor Green;
     }
     catch
     {
@@ -587,10 +585,10 @@ function global:azureCreateTopicSubscriptionClient(
 
     try
     {
-        if ($global:SubscriptionClient -eq $null -or $global:SubscriptionClient.TopicPath -ne $topicName -or $global:SubscriptionClient.Name -ne $topicSubscriptionName -or $global:SubscriptionClient.IsClosed)
+        if ($null -eq $global:SubscriptionClient -or $global:SubscriptionClient.TopicPath -ne $topicName -or $global:SubscriptionClient.Name -ne $topicSubscriptionName -or $global:SubscriptionClient.IsClosed)
         {
             $subs = Get-AzureRmServiceBusSubscription -ResourceGroupName $global:serviceBusResourceGroup -Namespace $global:serviceBusNamespace -Topic $topicName -Name $topicSubscriptionName;
-            if ($subs -eq $null)
+            if ($null -eq $subs)
             {
                 throw "Subscription $topicSubscriptionName does not exist for topic $topicName";
             }
@@ -621,26 +619,6 @@ function global:azureConnectServiceBusTopic(
     global:azureCreateTopicSubscriptionClient $topicName $topicSubscriptionName;
 }
 
-function global:loadVSTSVariableGroups()
-{
-    pushd .
-    try
-    {
-        $global:vstsVariables = $null;
-        $global:GetVariableGroupsPath = (global:findFile $env:GITBASEFOLDER 'GetVariableGroups.exe' $null).Where({ $_.ToLowerInvariant().Contains('bin\debug') })[0];
-        if ($global:GetVariableGroupsPath -ne $null)
-        {
-            $d = [System.IO.Path]::GetDirectoryName($global:GetVariableGroupsPath);
-            cd $d;
-            $global:vstsVariables = &'.\GetVariableGroups.exe'  'parsAPI-V2*Variant*' | ConvertFrom-Json;
-        }
-    }
-    finally
-    {
-        popd
-    }
-}
-
 function global:loadSettings([ValidateNotNullOrEmpty()][string]$settingsFilePath = 'Settings.json')
 {
     if (!(Test-Path $settingsFilePath))
@@ -653,13 +631,13 @@ function global:loadSettings([ValidateNotNullOrEmpty()][string]$settingsFilePath
     }
     
     $errorCount = $Error.Count;
-    $global:settings =  gc $settingsFilePath | ConvertFrom-Json -ErrorAction Stop;
+    $global:settings =  Get-Content $settingsFilePath | ConvertFrom-Json -ErrorAction Stop;
+    Write-Host "Loaded $($global:settings.Count) settings." -ForegroundColor Green;
     if ($errorCount -ne $Error.Count)
     {
         throw "Could not load $settingsFilePath.";
     }
 
-    global:loadVSTSVariableGroups;
 }
 
 function global:azureConnectServiceBusTopicWithSettingsFile([ValidateNotNullOrEmpty()][string]$settingsFilePath)
@@ -671,7 +649,7 @@ function global:azureConnectServiceBusTopicWithSettingsFile([ValidateNotNullOrEm
 
 function global:azureResetNoDisconnect()
 {
-    if ($global:AzureMessagingFactory -ne $null)
+    if ($null -ne $global:AzureMessagingFactory)
     {
         try{$global:AzureMessagingFactory.Close();}catch{}
     }
@@ -684,23 +662,17 @@ function global:azureResetNoDisconnect()
     $global:serviceBusNamespace   = $null;
     $Global:AzureDeadLetterQueueClient = $null;
     $global:HasAlreadyImportedAllDllsFromPSScriptRoot = $null;
+    Write-Host "$($global:AzureMessagingFactory) $($global:AzureNamespaceManager) $($global:settings) $($global:SubscriptionClient) $($global:TopicClient) $($global:resourceResourceGroup) $($global:serviceBusNamespace) $($Global:AzureDeadLetterQueueClient) $($global:HasAlreadyImportedAllDllsFromPSScriptRoot)";
 }
 
 function global:azureReset()
 {
     try{Disconnect-AzureRmAccount;}catch{}
     global:azureResetNoDisconnect;
-    try{del $global:azureProfileFilePath;}catch{}
+    try{Remove-Item $global:azureProfileFilePath;}catch{}
 }
 
-function global:azureConnectAsAdmin([ValidateNotNullOrEmpty()][string]$settingsFilePath = 'settingsSubscriptionS00197csubnpDPAPI1.json')
-{
-    global:azureReset;
-    $global:azureaccount = Login-AzureRmAccount;
-
-}
-
-if ($global:fileFinder -eq $null)
+if ($null -eq $global:fileFinder)
 {
 
     [string]$findClass = 
@@ -810,7 +782,7 @@ if ($global:fileFinder -eq $null)
 
 if (!($global:HasAlreadyImportedAllDllsFromPSScriptRoot))
 {
-    Get-ChildItem -Path $PSScriptRoot -Filter "*.dll" | foreach { try{Import-Module $_.FullName -ErrorAction SilentlyContinue;}catch{} };
+    Get-ChildItem -Path $PSScriptRoot -Filter "*.dll" | ForEach-Object { try{Import-Module $_.FullName -ErrorAction SilentlyContinue;}catch{} };
     $global:HasAlreadyImportedAllDllsFromPSScriptRoot = $true;
 }
 

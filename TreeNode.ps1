@@ -74,7 +74,7 @@ class TreeNode {
         foreach ($node in $this.children)
         {
             $n = $node.Scan($value);
-            if ($n -ne $null)
+            if ($null -ne $n)
             {
                 return $n;
             }
@@ -84,7 +84,7 @@ class TreeNode {
 
     [TreeNode] SeekThroughIndex([object]$value)
     {
-        if ($this.index -eq $null)
+        if ($null -eq $this.index)
         {
             $this.CreateIndex();
         }
@@ -107,7 +107,7 @@ class TreeNode {
         $n = $this;
         for ($i = 1; $i -lt $pathList.Count; $i++)
         {
-            if ($n -eq $null -or $pathList[$i - 1] -ne $n.val)
+            if ($null -eq $n -or $pathList[$i - 1] -ne $n.val)
             {
                 throw "Invalid Path List.";
             }
@@ -161,7 +161,7 @@ class TreeNode {
     [object[]] ToListInternal([object[]]$l)
     {
         $l += $this.val;
-        $this.children | foreach { $l = $_.ToListInternal($l) }
+        $this.children | ForEach-Object { $l = $_.ToListInternal($l) }
         $l += "<<<<POP>>>>";
         return $l;
     }
@@ -177,8 +177,8 @@ class TreeNode {
 
     [void] AddToRootIndex([TreeNode]$node)
     {
-        for ($parentNode = $node; $parentNode.parent -ne $null; $parentNode = $parentNode.parent){}
-        if ($parentNode.index -eq $null)
+        for ($parentNode = $node; $null -ne $parentNode.parent; $parentNode = $parentNode.parent){}
+        if ($null -eq $parentNode.index)
         {
             $parentNode.index = @{};
         }

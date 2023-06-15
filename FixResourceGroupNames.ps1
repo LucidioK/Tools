@@ -29,15 +29,8 @@ foreach ($groupName in $groupNames)
     }
 }
 
-
-
-#$allStorageAccounts = Get-AzureRmStorageAccount;
-#$allServiceBuses = Get-AzureRmServiceBusNamespace;
-#$allApplicationInsights = Get-AzureRmApplicationInsights;
-#$allKeyVaults = Get-AzureRmKeyVault;
-#$allCosmosDb = (Get-AzureRmResource) | where { $_.Kind -match 'GlobalDocumentDB' };
 Write-Host 'Retrieving all usw resources.' -ForegroundColor Green;
-$rrgs = get-azurermresource | select ResourceGroupName, Name | where { $valueToGroupAndVariableMap.ContainsKey($_.Name) };
+$rrgs = get-azurermresource | Select-Object ResourceGroupName, Name | Where-Object { $valueToGroupAndVariableMap.ContainsKey($_.Name) };
 
 foreach ($rrg in $rrgs)
 {
@@ -47,8 +40,8 @@ foreach ($rrg in $rrgs)
         write-host "It is a resource deployed by infrastructure pipeline, let's see if its resource group is correct in the variables..." -ForegroundColor Green;
         $variableGroupName = $valueToGroupAndVariableMap[$rrg.Name].Split(',')[0];
         $variableName      = $valueToGroupAndVariableMap[$rrg.Name].Split(',')[1];
-        $resourceNameAndResourceGroupVariablePair = $resourceNameAndResourceGroupVariablePairs | Where { $_.resourceNameVariable -match $variableName } | select -First 1;
-        if ($resourceNameAndResourceGroupVariablePair -ne $null)
+        $resourceNameAndResourceGroupVariablePair = $resourceNameAndResourceGroupVariablePairs | Where-Object { $_.resourceNameVariable -match $variableName } | Select-Object -First 1;
+        if ($null -ne $resourceNameAndResourceGroupVariablePair)
         {
             $resourceGroupFromVariable = $allVariables[$variableGroupName][$resourceNameAndResourceGroupVariablePair.resourceGroupNameVariable];
             if ($resourceGroupFromVariable -notmatch $rrg.ResourceGroupName)

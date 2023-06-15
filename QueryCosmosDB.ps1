@@ -18,7 +18,7 @@
 Add-Type -AssemblyName System.Web
 
 # generate authorization key
-Function Generate-MasterKeyAuthorizationSignature
+Function New-MasterKeyAuthorizationSignature
 {
 	[CmdletBinding()]
 	Param
@@ -60,7 +60,7 @@ Function Query-CosmosDb
 	$ResourceLink = "dbs/$DatabaseId/colls/$CollectionId"
 
 	$dateTime = [DateTime]::UtcNow.ToString("r")
-	$authHeader = Generate-MasterKeyAuthorizationSignature -verb $Verb -resourceLink $ResourceLink -resourceType $ResourceType -key $MasterKey -keyType "master" -tokenVersion "1.0" -dateTime $dateTime
+	$authHeader = New-MasterKeyAuthorizationSignature -verb $Verb -resourceLink $ResourceLink -resourceType $ResourceType -key $MasterKey -keyType "master" -tokenVersion "1.0" -dateTime $dateTime
 	$queryJson = @{query=$Query} | ConvertTo-Json
 	$header = @{authorization=$authHeader;"x-ms-documentdb-isquery"="True";"x-ms-version"="2017-02-22";"x-ms-date"=$dateTime}
 	$contentType= "application/query+json"

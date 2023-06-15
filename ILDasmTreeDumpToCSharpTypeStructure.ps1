@@ -10,10 +10,9 @@ if (!(Test-Path $IlDasmTypeTreePath))
     throw "$IlDasmTypeTreePath not found."
 }
 
-[string[]]$lines = gc $IlDasmTypeTreePath;
+[string[]]$lines = Get-Content $IlDasmTypeTreePath;
 
 $currentClass = $null;
-$currentInterface = $null;
 foreach ($line in $lines)
 {
     if ($line.Contains("[CLS] $BasicNamespace"))

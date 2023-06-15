@@ -30,7 +30,7 @@
                 $resultsWithExactMatch = @();
                 foreach ($filename in $finalresult)
                 {
-                    if (([string]::Join("", (gc $filename))).Contains($optionalTextToFindWithoutWildcards))
+                    if (([string]::Join("", (Get-Content $filename))).Contains($optionalTextToFindWithoutWildcards))
                     {
                         $resultsWithExactMatch += $filename;
                     }

@@ -16,7 +16,7 @@ function deleteExistingResourcesFromResourceGroup($resourceGroupName)
     foreach ($r in (Get-AzureRmResource).Where({ $_.ResourceGroupName -eq $resourceGroupName } ))
     {
         $jobName = "Remove-AzureRmResource $($r.ResourceId)";
-        $isItAlreadyRunning = ((get-job -State Running).where({ $_.Name -eq $jobName })) -eq $null;
+        $isItAlreadyRunning = $null -eq ((get-job -State Running).where({ $_.Name -eq $jobName }));
         if (!($isItAlreadyRunning))
         {
             Write-Host "Removing $($r.Name)" -ForegroundColor Green;
@@ -42,11 +42,11 @@ $newTemplateParametersFile = $null;
 if ($ResourceBeingDeployedName)
 {
     $r = Get-AzureRmResource -ResourceName $ResourceBeingDeployedName -ResourceGroupName $ResourceGroupName;
-    if ($r -ne $null)
+    if ($null -ne $r)
     {
        $newTemplateParametersFile = [System.IO.Path]::GetTempFileName();
        $newResourceName = "r" + $now +"r";
-       (gc $TemplateParametersFile).Replace($ResourceBeingDeployedName, $newResourceName) | Out-File $newTemplateParametersFile;
+       (Get-Content $TemplateParametersFile).Replace($ResourceBeingDeployedName, $newResourceName) | Out-File $newTemplateParametersFile;
        $TemplateParametersFile = $newTemplateParametersFile;
     }
 }
@@ -59,10 +59,10 @@ if ($DeleteExistingResourcesFromResourceGroup)
 
 }
 
-if ((Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue) -eq $null)
+if ($null -eq (Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue))
 {
     Write-Host "Resource group $ResourceGroupName does not exist, trying to create it. First, select the location for the resource group.." -ForegroundColor Green;
-    $location = (get-azurermlocation).Location | sort | Out-GridView -OutputMode Single;
+    $location = (get-azurermlocation).Location | Sort-Object | Out-GridView -OutputMode Single;
     New-AzureRmResourceGroup -Name $ResourceGroupName -Location $location -ErrorAction Stop;
 }
 
@@ -78,9 +78,9 @@ if (!($KeepDeployment))
     Remove-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $deploymentName;
 }
 
-if ($newTemplateParametersFile -ne $null)
+if ($null -ne $newTemplateParametersFile)
 {
-    del $newTemplateParametersFile;
+    Remove-Item $newTemplateParametersFile;
 }
 
 return $global:lastDeployment;

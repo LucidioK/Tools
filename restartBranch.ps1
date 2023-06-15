@@ -1,9 +1,9 @@
 ﻿
-$branch=(git branch | where { $_.StartsWith('* ') } | select { $_.Substring(2) })[0].' $_.Substring(2) ';
+$branch=(git branch | Where-Object { $_.StartsWith('* ') } | Select-Object { $_.Substring(2) })[0].' $_.Substring(2) ';
 git diff "master..$branch" | out-file patch.txt;
 n patch.txt;
-$x=Read-Host "Edit the patch file: remove diffs you do not want, save with Encode UTF-8, must have a \r\n at the last line, then hit enter to continue of Control-C to stop: ";
-if ($x -eq $null)
+$x = Read-Host "Edit the patch file: remove diffs you do not want, save with Encode UTF-8, must have a \r\n at the last line, then hit enter to continue of Control-C to stop: ";
+if ($null -eq $x)
 {
     throw "Execution aborted by user.";
 }
@@ -29,7 +29,7 @@ $files = git status --porcelain;
 $selectedFiles =  $files | Out-GridView -OutputMode Multiple;
 
 $x=Read-Host "Select files to be committed, then hit enter to continue of Control-C to stop: ";
-if ($x -eq $null)
+if ($null -eq $x)
 {
     throw "Execution aborted by user.";
 }
@@ -44,4 +44,4 @@ if ($x.Length -eq 0) { $x = $firstCommitMessage; }
 git commit '-m' ('"' + $x + '"');
 git push --set-upstream origin $branch
 
-del patch.txt;
+Remove-Item patch.txt;

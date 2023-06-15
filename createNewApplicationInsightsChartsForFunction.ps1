@@ -53,7 +53,7 @@ function extractWithRegex([string]$str, [string]$patternWithOneGroupMarker)
 
 function cloneObject($o)
 {
-    if ($o -eq $null)
+    if ($null -eq $o)
     {
         return $null;
     }
@@ -94,7 +94,7 @@ function newPart($basePart, [int]$partId, [string]$regexPatternForFunctionNameIn
     return $newPart;
 }
 
-$a = gc $applicationInsightsTemplateJsonFilePath | ConvertFrom-Json;
+$a = Get-Content $applicationInsightsTemplateJsonFilePath | ConvertFrom-Json;
 $parts = $a.resources[0].properties.lenses."0".parts;
 $count = (Get-Member -InputObject $parts -MemberType NoteProperty).Count;
 $maxX  = -1;
@@ -108,7 +108,7 @@ for ($i = 0; $i -lt $count; $i++)
     $maxY = max $part.position.y $maxY;
     $query = ($part.metadata.inputs).Where( { $_.name -eq 'Query' } );
 
-    if ($query -ne $null -and $query.Value -ne $null)
+    if ($null -ne $query -and $null -ne $query.Value)
     {
         if ($query.Value.Contains('summarize count() by resultCode'))
         {
@@ -131,7 +131,7 @@ $nextResponseTimePartObject = newPart $responseTimePart $nextresponseTimeId '.*a
 $a.resources[0].properties.lenses."0".parts | Add-Member -Name $nextAvailabilityId.ToString() -MemberType NoteProperty -Value $nextAvailabilityPartObject;
 $a.resources[0].properties.lenses."0".parts | Add-Member -Name $nextResponseTimeId.ToString() -MemberType NoteProperty -Value $nextResponseTimePartObject;
 
-if ($global:JsonBeautifierJsonBeautifyDefined -eq $null)
+if ($null -eq $global:JsonBeautifierJsonBeautifyDefined)
 {
     &(join-path $PSScriptRoot 'Utils.ps1');
 }

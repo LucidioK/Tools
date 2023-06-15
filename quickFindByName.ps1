@@ -4,7 +4,7 @@
 )
 
 
-if ($global:finder -eq $null) { &(join-path $PSScriptRoot 'utils.ps1'); }
+if ($null -eq $global:finder) { &(join-path $PSScriptRoot 'utils.ps1'); }
 
 $global:finder.Initialize($SearchFolder, $FileNamePattern);
 

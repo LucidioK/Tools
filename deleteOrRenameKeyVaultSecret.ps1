@@ -7,13 +7,13 @@
 )
 
 Write-Host "Retrieving all key vaults associated subcscription $($azureAccount.Context.Subscription.Name) that satisfies regex $KeyVaultNameRegex" -ForegroundColor Green;
-$allKeyVaults = (Get-AzureRmKeyVault) | where { $_.VaultName -match $KeyVaultNameRegex };
+$allKeyVaults = (Get-AzureRmKeyVault) | Where-Object { $_.VaultName -match $KeyVaultNameRegex };
 
 foreach ($keyVault in $allKeyVaults)
 {
     Write-Host "Trying to retrieve $SecretName from key vault $($keyVault.VaultName)" -ForegroundColor Green;
     $secret = Get-AzureKeyVaultSecret -VaultName $keyVault.VaultName -Name $SecretName;
-    if ($secret -ne $null)
+    if ($null -ne $secret)
     {
         Write-Host "Secret found... " -ForegroundColor Green -NoNewline;
         if ($Operation -eq 'Rename')

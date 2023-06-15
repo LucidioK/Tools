@@ -65,14 +65,12 @@ function GetEventsUrl([string]$rsid, [string]$columns, [string]$format)
     return $url;
 }
 
-
 function Search([string]$terms, [string]$filter, [int]$size, [string]$from, [string]$to)
 {
     $url = GetSearchUrl  $terms $filter $size $from $to;
     $searchResult = GetFromLoggly $url;
     return $searchResult;
 }
-
 
 function GetEvents([string]$rsid, [string]$columns, [string]$format)
 {
@@ -108,8 +106,8 @@ function RemoveLogMsg([string]$eventsResult)
 
     $tempFileName = [System.IO.Path]::GetTempFileName();
     $events | Export-Csv -Encoding ASCII -Path $tempFileName -NoTypeInformation;
-    $eventsResult = gc $tempFileName;
-    del $tempFileName;
+    $eventsResult = Get-Content $tempFileName;
+    Remove-Item $tempFileName;
     if (!($eventsResult.Contains("`n")))
     {
         $eventsResult = $eventsResult -replace '" "20',"`"`n`"";
@@ -124,31 +122,36 @@ function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$
     {
         $newObject = new-object -TypeName PSCustomObject;
     }
+
     if ($prefix.Length -gt 0)
     {
         $prefix += "_";
     }
-    $propertyNames = get-member -InputObject $o -MemberType NoteProperty | select -ExpandProperty Name;
+
+    $propertyNames = get-member -InputObject $o -MemberType NoteProperty | Select-Object -ExpandProperty Name;
     $exceptionProperties = @{};
     foreach ($propertyName in $propertyNames)
     {
         $value = $o."$propertyName";
         $name = ($prefix + $propertyName);
-        $type = if ($value -eq $null) { "null" } else { $value.GetType().Name };
+        $type = if ($null -eq $value) { "null" } else { $value.GetType().Name };
 #Write-host "--> $name $type $value" -ForegroundColor Green;
-        if ($value -ne $null -and $type -eq 'Object[]')
+        if ($null -ne $value -and $type -eq 'Object[]')
         {
             $value = $value | ConvertTo-Json | ConvertFrom-Json;
             $type = $value.GetType().Name;
         }
-        if ($value -ne $null -and $type -eq 'PSCustomObject')
+
+        if ($null -ne $value -and $type -eq 'PSCustomObject')
         {
             $newObject = flattenObject $value $name $newObject;
         }
-        if ($value -ne $null -and $type -eq 'Hashtable')
+
+        if ($null -ne $value -and $type -eq 'Hashtable')
         {
             Add-Member -InputObject $newObject -MemberType NoteProperty -Name $name -Value ($value | convertto-json -Compress);
         }
+
         if ($type -ne 'PSCustomObject' -and $type -ne 'Object[]' -and $type -ne 'Hashtable')
         {
             if ($type -eq "String")
@@ -165,16 +168,17 @@ function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$
             }
         }
     }
-    $innerExceptionsPropertyNames = $exceptionProperties.Keys | where { $_.Contains("InnerExceptions") };
-    $exceptionsPropertyNames      = $exceptionProperties.Keys | where { $_.Contains("_Exception_") -and !($_.Contains("InnerExceptions")) };
-    if ($innerExceptionsPropertyNames -ne $null -and $innerExceptionsPropertyNames.Count -gt 0)
+
+    $innerExceptionsPropertyNames = $exceptionProperties.Keys | Where-Object { $_.Contains("InnerExceptions") };
+
+    if ($null -ne $innerExceptionsPropertyNames -and $innerExceptionsPropertyNames.Count -gt 0)
     {
         $innerMostLevel = "";
-        while (($innerExceptionsPropertyNames | where { $_.Contains($innerMostLevel + '_InnerExceptions') }).Count -gt 0)
+        while (($innerExceptionsPropertyNames | Where-Object { $_.Contains($innerMostLevel + '_InnerExceptions') }).Count -gt 0)
         {
             $innerMostLevel += '_InnerExceptions';
         }
-        $innerMostPropertyNames = $exceptionProperties.Keys | where { $_.Contains($innerMostLevel) };
+        $innerMostPropertyNames = $exceptionProperties.Keys | Where-Object { $_.Contains($innerMostLevel) };
         foreach ($innerMostPropertyName in $innerMostPropertyNames)
         {
             $plainExceptionPropertyName = $innerMostPropertyName.Replace($innerMostLevel, "");
@@ -185,15 +189,18 @@ function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$
             $exceptionProperties.Remove($innerExceptionsPropertyName);
         }
     }
+
     foreach ($exceptionPropertyName in $exceptionProperties.Keys)
     {
         Add-Member -InputObject $newObject -MemberType NoteProperty -Name $exceptionPropertyName -Value $exceptionProperties[$exceptionPropertyName] -Force;
     }
+
     if ($exceptionProperties.ContainsKey('json_Exception_StackTrace') -and $exceptionProperties['json_Exception_StackTrace'].Contains('LK.'))
     {
         $firstLKMethodOnStackTrace = $exceptionProperties['json_Exception_StackTrace'] -replace '.*?(LK\.[A-Za-z0-9\._]+).*','$1';
         Add-Member -InputObject $newObject -MemberType NoteProperty -Name 'firstLKMethodOnStackTrace' -Value $firstLKMethodOnStackTrace -Force;
     }
+
     return $newObject;
 }
 
@@ -201,11 +208,11 @@ if (ShouldCareAbout $jsonCommit)
 {
     $filter = "$(AtLeastEmptyString $filter) json.Commit:`"$jsonCommit`"";
 }
+
 if (ShouldCareAbout $jsonVertical)
 {
     $filter = "$(AtLeastEmptyString $filter) json.Vertical:`"$jsonVertical`"";
 }
-
 
 $searchResult = ((Search $terms $filter $size $from $to) | ConvertFrom-Json);
 
@@ -223,6 +230,7 @@ elseif (!($keepLogMsgColumn))
     Write-Host "About to clean up CSV properties..." -ForegroundColor Green;
     $eventsResult = RemoveLogMsg $eventsResult $format;
 }
+
 $end=get-date;
 Write-Host "Done in $(($end-$start).Seconds) seconds" -ForegroundColor Green;
 

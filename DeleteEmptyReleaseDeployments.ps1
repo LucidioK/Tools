@@ -1,6 +1,6 @@
 ﻿
 param($releaseDefinitionName = 'pars.Infrastructure.Develop.Release')
-if ((get-command -Name 'Add-TeamAccount') -eq $null)
+if ($null -eq (get-command -Name 'Add-TeamAccount'))
 {
     Save-Module -Name Team  -Path C:\temp\PowerShell;
     Install-Module -Name Team ;
@@ -8,8 +8,8 @@ if ((get-command -Name 'Add-TeamAccount') -eq $null)
 }
 
 Add-TeamAccount -Account $global:settings.tfsAccount -PersonalAccessToken $global:settings.tfsAccessToken;
-$releaseDefinition = (Get-ReleaseDefinition -ProjectName $global:settings.tfsProject) | where { $_.name -eq $releaseDefinitionName };
-if ($releaseDefinition -eq $null)
+$releaseDefinition = (Get-ReleaseDefinition -ProjectName $global:settings.tfsProject) | Where-Object { $_.name -eq $releaseDefinitionName };
+if ($null -eq $releaseDefinition)
 {
     throw "Could not find release definition $releaseDefinitionName";
 }

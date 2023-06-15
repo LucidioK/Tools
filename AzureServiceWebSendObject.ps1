@@ -1,7 +1,7 @@
 ﻿param(
     [parameter(Mandatory=$true,  Position=0)][object]$Object,
     [parameter(Mandatory=$false, Position=1)][string]$SettingsFileName = $null, # = "settings.json",
-    [parameter(Mandatory=$false, Position=2)][string]$ConnectionString = $null, # = "Endpoint=sb://svbdeleteme.servicebus.windows.net/;SharedAccessKeyName=AuthorizationRules_RootManageSharedAccessKey_name;SharedAccessKey=b7Yilyxsgv2QxN2LyIP/b0nJhecgTUGgSIm5S1fXA+o=",
+    [parameter(Mandatory=$false, Position=2)][string]$ConnectionString = $null, # = "Endpoint=sb://svbdeleteme.servicebus.windows.net/;SharedAccessKeyName=AuthorizationRules_RootManageSharedAccessKey_name;SharedAccessKey=<ACCESS_KEY>",
     [parameter(Mandatory=$false, Position=2)][string]$TopicName        = $null, # = "anytopic",
     [parameter(Mandatory=$false, Position=3)][string]$OptionalLabel    = ""
 ) 
@@ -50,7 +50,7 @@ if ($ConnectionString -ne $null -and $ConnectionString.Length -ne 0)
     $topicClient = $factory.CreateTopicClient($TopicName);
 }
 
-if ($topicClient -eq $null)
+if ($null -eq $topicClient)
 {
     throw 'Please provide either SettingsFileName or ConnectionString and TopicName.';
 }

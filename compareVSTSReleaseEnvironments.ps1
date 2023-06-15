@@ -3,14 +3,14 @@
     $nameOfCorrectlyRunningEnvironment        = 'TestEast', 
     $toBeVerifiedReleaseJsonFileName          = 'C:\temp\pars.Infrastructure.Master.Release.json')
 
-if ($global:allSPNs -eq $null)
+if ($null -eq $global:allSPNs)
 {
-    $global:allSPNs                           = (Get-AzureRmADServicePrincipal) | Select Id, DisplayName;
+    $global:allSPNs                           = (Get-AzureRmADServicePrincipal) | Select-Object Id, DisplayName;
 }
 
-if ($global:allServiceEndPoints -eq $null)
+if ($null -eq $global:allServiceEndPoints)
 {
-    $global:allServiceEndPoints               = (gc (Join-Path $global:powerShellScriptDirectory 'allVSTSServiceEndPoints.json') | ConvertFrom-Json ) | Select Id, Name;
+    $global:allServiceEndPoints               = (Get-Content (Join-Path $global:powerShellScriptDirectory 'allVSTSServiceEndPoints.json') | ConvertFrom-Json ) | Select-Object Id, Name;
 }
 
 class PropertyDiscrepancy
@@ -58,15 +58,15 @@ function addSPNDisplayNameIfNeeded([string]$value)
 {
     if (global:isItAGuid $value)
     {
-        $possibleSPN                          = ($global:allServiceEndPoints | where { $_.Id -eq $value } ).Name;
-        if ($possibleSPN -ne $null -and $possibleSPN.ToString() -ne '')
+        $possibleSPN                          = ($global:allServiceEndPoints | Where-Object { $_.Id -eq $value } ).Name;
+        if ($null -ne $possibleSPN -and $possibleSPN.ToString() -ne '')
         {
             $value                            = $value + " [$possibleSPN]";
         }
         else
         {
-            $possibleSPN                      = ($global:allSPNs | where { $_.Id -eq $value } ).DisplayName;
-            if ($possibleSPN -ne $null -and $possibleSPN.ToString() -ne '')
+            $possibleSPN                      = ($global:allSPNs | Where-Object { $_.Id -eq $value } ).DisplayName;
+            if ($null -ne $possibleSPN -and $possibleSPN.ToString() -ne '')
             {
                 $value                        = $value + " [$possibleSPN]";
             }
@@ -77,8 +77,8 @@ function addSPNDisplayNameIfNeeded([string]$value)
 
 function areDifferent($o1, $o2)
 {
-    if ($o1 -ne $null -and $o1.GetType() -eq [string]) { $o1 = $o1.Replace(' ',''); }
-    if ($o2 -ne $null -and $o2.GetType() -eq [string]) { $o2 = $o2.Replace(' ',''); }
+    if ($null -ne $o1 -and $o1.GetType() -eq [string]) { $o1 = $o1.Replace(' ',''); }
+    if ($null -ne $o2 -and $o2.GetType() -eq [string]) { $o2 = $o2.Replace(' ',''); }
     return $o1 -ne $o2;
 }
 
@@ -111,8 +111,8 @@ function compareObjects([WorkflowTask]$worObj, $correctObject, $correctEnvironme
         }
         else
         { 
-            if ($correctValue -eq $null -and $checkingValue  -eq $null) { continue; }
-            if ($correctValue -ne $null -and  $checkingValue -ne $null -and $correctValue.ToString() -eq '' -and $checkingValue.ToString() -eq '') { continue; }
+            if ($null -eq $correctValue -and $null -eq $checkingValue) { continue; }
+            if ($null -ne $correctValue -and  $null -ne $checkingValue -and $correctValue.ToString() -eq '' -and $checkingValue.ToString() -eq '') { continue; }
             if (areDifferent $correctValue $checkingValue)
             {
                 [PropertyDiscrepancy]$disObj  = new-object PropertyDiscrepancy;
@@ -132,8 +132,8 @@ $analysis.NameOfCorrectlyRunningEnvironment   = $NameOfCorrectlyRunningEnvironme
 $analysis.ToBeVerifiedReleaseJsonFileName     = $ToBeVerifiedReleaseJsonFileName;
 $analysis.CheckedEnvironments                 = @();
 
-$correctReleaseDefinition                     = gc $correctReleaseJsonFileName | ConvertFrom-Json;
-$toBeVerifiedReleaseDefinition                = gc $toBeVerifiedReleaseJsonFileName | ConvertFrom-Json;
+$correctReleaseDefinition                     = Get-Content $correctReleaseJsonFileName | ConvertFrom-Json;
+$toBeVerifiedReleaseDefinition                = Get-Content $toBeVerifiedReleaseJsonFileName | ConvertFrom-Json;
 
 $correctEnvironment                           = ($correctReleaseDefinition.Environments).Where({$_.Name -eq $nameOfCorrectlyRunningEnvironment});
 $environmentsToCheck                          = ($toBeVerifiedReleaseDefinition.Environments).Where({$_.Name -ne $nameOfCorrectlyRunningEnvironment});
@@ -157,8 +157,8 @@ foreach ($environmentToCheck in $environmentsToCheck)
         $phaObj.WorkflowTasks                 = @();
         $phaseName                            = $phase.Name;
         Write-Host " Phase $phaseName" -ForegroundColor Green;
-        $correctPhase                         = $correctEnvironment.DeployPhases | Where { $_.Name -eq $phaseName};
-        if ($correctPhase -eq $null)
+        $correctPhase                         = $correctEnvironment.DeployPhases | Where-Object { $_.Name -eq $phaseName};
+        if ($null -eq $correctPhase)
         {
             [GenericDiscrepancy]$disObj       = New-Object GenericDiscrepancy;
             $disObj.Name                      = $phaseName;
@@ -177,8 +177,8 @@ foreach ($environmentToCheck in $environmentsToCheck)
             [WorkflowTask]$worObj             = New-Object WorkflowTask;
             $worObj.Name                      = $workflowTaskName;
             $worObj.PropertyDiscrepancies     = @();
-            $correctWorkflowTask              = ($correctPhase.WorkflowTasks) | Where { $_.Name -eq $workflowTaskName};
-            if ($correctWorkflowTask -eq $null)
+            $correctWorkflowTask              = ($correctPhase.WorkflowTasks) | Where-Object { $_.Name -eq $workflowTaskName};
+            if ($null -eq $correctWorkflowTask)
             {
                 [GenericDiscrepancy]$disObj   = New-Object GenericDiscrepancy;
                 $disObj.Name                  = $workflowTaskName;

@@ -98,7 +98,7 @@ class SimplifiedShape
 
     [SimplifiedShape]static FromShape([VisioBase]$vb, [object]$shape)
     {
-        if ($shape -eq $null)
+        if ($null -eq $shape)
         {
             return $null;
         }
@@ -147,11 +147,11 @@ class SimplifiedShape
 
     [void] Add([string]$toOrFrom, [int[]]$ids, [string]$label)
     {
-        if ($this."$toOrFrom" -eq $null)
+        if ($null -eq $this."$toOrFrom")
         {
             $this."$toOrFrom" = @();
         }
-        $this."$toOrFrom" += ($ids | foreach { [GraphEdge]::new($_, $label) } );
+        $this."$toOrFrom" += ($ids | ForEach-Object { [GraphEdge]::new($_, $label) } );
     }
 };
 
@@ -336,18 +336,13 @@ class VisioBase
     {
         $this.availableStencilItems = @{};
         $docs = $this.doc.Application.Documents;
-        #$docIDs = ($docs).ID;
-        #foreach ($docID in $docIDs)
-        #{
-        #    $item = $docs.ItemFromID($docID);
         for ($i = 1; $i -le $docs.Count; $i++)
         {
             $item = $docs.Item($i);
             if ($item.Name.EndsWith(".vssx"))
             {
-                $stencilName = $item.Name;
                 $masters = $item.Masters;
-                $masters | foreach { 
+                $masters | ForEach-Object { 
                     if (!($this.availableStencilItems.ContainsKey($_.NameU))) 
                     { 
                         $this.availableStencilItems.Add($_.NameU, $_); 
@@ -359,11 +354,11 @@ class VisioBase
 
     [string[]] GetAvailableStencilItems()
     {
-        $as = ($this.availableStencilItems.Keys | select | sort);
-        if ($as -eq $null -or $as.Count -eq 0)
+        $as = ($this.availableStencilItems.Keys | Select-Object | Sort-Object);
+        if ($null -eq $as -or $as.Count -eq 0)
         {
             $this.InitializeAvailableStencils();
-            $as = ($this.availableStencilItems.Keys | select | sort);
+            $as = ($this.availableStencilItems.Keys | Select-Object | Sort-Object);
         }
         return $as;
     }
@@ -518,7 +513,7 @@ class VisioBase
     [object] RemoveSubShapes([object]$shape)
     {
         $shape = $this.AsShape($shape);
-        $this.GetSubShapes($shape) | foreach { 
+        $this.GetSubShapes($shape) | ForEach-Object { 
 
             $subShape = $shape.ContainingPage.Shapes.ItemFromID($_);
             $subShape.RemoveFromContainers();
@@ -539,7 +534,7 @@ class VisioBase
         catch
         {
             $id = $shape.ID;
-            $ss = $this.GetShapes($shape.ContainingPage.NameU, $null) | where { $_.MemberOfContainers.Contains($id) };
+            $ss = $this.GetShapes($shape.ContainingPage.NameU, $null) | Where-Object { $_.MemberOfContainers.Contains($id) };
         }
         return $ss;
     }
@@ -557,9 +552,9 @@ class VisioBase
         catch
         {
             $id = $shape.ID;
-            $ss = $this.GetShapes($shape.ContainingPage.NameU, $null) | where { $_.MemberOfContainers.Contains($id) };
+            $ss = $this.GetShapes($shape.ContainingPage.NameU, $null) | Where-Object { $_.MemberOfContainers.Contains($id) };
         }
-        $ss = [SimplifiedShape]::FromShapes($this, $ss) | sort  -Property @{ expression = "Bottom"; Descending = $True },@{ expression = "Left"; Descending = $False };
+        $ss = [SimplifiedShape]::FromShapes($this, $ss) | Sort-Object -Property @{ expression = "Bottom"; Descending = $True },@{ expression = "Left"; Descending = $False };
         return $ss;
     }
 
@@ -626,7 +621,7 @@ class VisioBase
                             Write-Host "Failed with $($_.Exception.Message) $i $j $k" -ForegroundColor Magenta;
                             continue;
                         }
-                        if ($p -ne $null -and $p.Name -match '^[A-Za-z]+$' -or $p.Name.StartsWith('Connections.'))
+                        if ($null -ne $p -and $p.Name -match '^[A-Za-z]+$' -or $p.Name.StartsWith('Connections.'))
                         {
                             $props += [PsCustomObject]@{ Name =  $p.Name; Value = $p.ResultIU; I=$i; J = $j; K = $k };  
                         }
@@ -661,13 +656,13 @@ class VisioBase
 
     [object[]] GetPages()
     {
-        $pages = $this.doc.Pages | foreach { $_.Name };
+        $pages = $this.doc.Pages | ForEach-Object { $_.Name };
         return $pages;
     }
 
     [object] GetPage([string]$name)
     {
-        $page = $this.doc.Pages | where { $_.Name -eq $name};
+        $page = $this.doc.Pages | Where-Object { $_.Name -eq $name};
         return $page;
     }
 
@@ -689,7 +684,7 @@ class VisioBase
 
             if (!([string]::IsNullOrEmpty($shapeMasterName)))
             {
-                $pageShapes = $pageShapes | where { $_.Master.NameU -eq $shapeMasterName };
+                $pageShapes = $pageShapes | Where-Object { $_.Master.NameU -eq $shapeMasterName };
             }
 
             $shapes += $pageShapes;
@@ -728,7 +723,7 @@ class VisioBase
     {
         $shape = $this.AsShape($shape);
         $type = $shape.GetType();
-        if ($type.Name -eq 'PSCustomObject' -and $shape.Text -ne $null)
+        if ($type.Name -eq 'PSCustomObject' -and $null -ne $shape.Text)
         {
             return $shape.Text;
         }
@@ -737,8 +732,8 @@ class VisioBase
             $shapeText = '';
             if ([string]::IsNullOrEmpty($shape.Characters.TextAsString))
             {
-                $textList  = $shape.Shapes | foreach { $_.Characters.TextAsString };
-                if ($textList -ne $null)
+                $textList  = $shape.Shapes | ForEach-Object { $_.Characters.TextAsString };
+                if ($null -ne $textList)
                 {
                     $shapeText = [string]::Join("`n" ,$textList);
                 }
@@ -788,8 +783,6 @@ class VisioBase
                     throw "I only know how to deal with relationships through Dynamic Connector, this is using $($connectedShape.Master.NameU)";
                 }
                 $connectorText = $this.GetShapeText($connectedShape);
-                $connectorId   = $connectedShape.Id;
-
                 $hasEndArrow   = $this.GetShapeProperty($connectedShape, 'EndArrow') -ne 0;
                 $pointedShapeIndex = if ($hasEndArrow) {2} else {1};
                 $relatedId     = $connectedShape.Connects.Item($pointedShapeIndex)."$($opposite)Cell".Shape.ID;
@@ -811,7 +804,7 @@ class VisioBase
     [object[]] GetGraphStartingAtInitialState()
     {
         $is = $this.GetShapes($null, 'Initial state');
-        if ($is -eq $null -or $is.Count -eq 0)
+        if ($null -eq $is -or $is.Count -eq 0)
         {
             throw "No Initial State shape found.";
         }
@@ -829,7 +822,7 @@ class VisioBase
     [object[]] GetGraphStartingAtInitialState([string]$pageName)
     {
         $is = $this.GetShapes($pageName, 'Initial state');
-        if ($is -eq $null -or $is.Count -eq 0)
+        if ($null -eq $is -or $is.Count -eq 0)
         {
             throw "No Initial State shape found in page $pageName.";
         }
@@ -861,7 +854,7 @@ class VisioBase
             $nextLevel = @();
             foreach ($currentLevelShape in $currentLevel)
             {
-                if (($graph | where { $_.ID -eq $currentLevelShape.ID }) -ne $null)
+                if ($null -ne ($graph | Where-Object { $_.ID -eq $currentLevelShape.ID }))
                 {
                     continue;
                 }
@@ -942,8 +935,8 @@ class VisioBase
             param([string]$d)
 
             $words = (($d -replace '[^A-Za-z 0-9]',' ') -replace ' +',' ').Split(' ') | 
-                where { $_.Length -gt 0 } | 
-                foreach { [char]::ToUpperInvariant($_[0]) + $_.SubString(1) };
+                Where-Object   { $_.Length -gt 0 } | 
+                ForEach-Object { [char]::ToUpperInvariant($_[0]) + $_.SubString(1) };
 
             return [string]::Join("", $words);
         }
@@ -1002,17 +995,17 @@ class VisioBase
                 $optionsList = $null;
                 if (!([string]::IsNullOrEmpty($ss.Text)))
                 {
-                    $optionsList = $ss.Text.Split("`n") | where { !([string]::IsNullOrEmpty($_)) } | select -Unique;
+                    $optionsList = $ss.Text.Split("`n") | Where-Object { !([string]::IsNullOrEmpty($_)) } | Select-Object -Unique;
                 }
 
-                if ($optionsList -eq $null)
+                if ($null -eq $optionsList)
                 {
                     $optionsList = @("No", "Options", "Informed");
                 }
 
                 $ii.Placeholder = $optionsList[0];
                 $options = @{};
-                $optionsList | foreach { $options.Add($_, $_); }
+                $optionsList | ForEach-Object { $options.Add($_, $_); }
                 $ii.Options = $options;
                 return $ii;
             }
@@ -1073,9 +1066,7 @@ class VisioBase
                 [OutputType([bool])]
                 param([SimplifiedShape]$s1, [SimplifiedShape]$s2)
 
-                $m2 = (($s2.Top + $s2.Bottom) / 2);
-                $t1 = $s1.Top;
-                $b1 = $s1.Bottom;
+                $m2   = (($s2.Top + $s2.Bottom) / 2);
                 $isIt = ($s1.Top -gt $m2 -and $s1.Bottom -lt $m2);
 
                 return $isIt;
@@ -1107,8 +1098,8 @@ class VisioBase
                 $currentNodeId = $graph[$graphIndex].ID;
                 for ($i = $graphIndex -1; $i -ge 0; $i--)
                 {
-                    $referencesToCurrentNodeId = $graph[$i].To | where { $_.ID -eq $currentNodeId };
-                    if ($referencesToCurrentNodeId -ne $null -and $referencesToCurrentNodeId.Count -gt 0)
+                    $referencesToCurrentNodeId = $graph[$i].To | Where-Object { $_.ID -eq $currentNodeId };
+                    if ($null -ne $referencesToCurrentNodeId -and $referencesToCurrentNodeId.Count -gt 0)
                     {
                         return $graph[$i];
                     }
@@ -1120,9 +1111,9 @@ class VisioBase
             function setDialogConditionIfExists([WizardStep]$wizardStep, [SimplifiedShape[]]$graph, [int]$graphIndex)
             {
                 [SimplifiedShape]$predecessor = getPredecessorIfExists $graph $graphIndex;
-                if ($predecessor -ne $null)
+                if ($null -ne $predecessor)
                 {
-                    [string]$edgeLabel = ($predecessor.To | where { $_.ID -eq $graph[$graphIndex].ID } | select -First 1).Label;
+                    [string]$edgeLabel = ($predecessor.To | Where-Object { $_.ID -eq $graph[$graphIndex].ID } | Select-Object -First 1).Label;
                     if (!([string]::IsNullOrEmpty($edgeLabel)) -and $edgeLabel.Contains(':'))
                     {
                         $split = $edgeLabel.Split(':');
@@ -1137,7 +1128,7 @@ class VisioBase
             $containerShape = $graph[$graphIndex];
             [SimplifiedShape[]]$subShapes = $this.GetSubSimplifiedShapes($containerShape);
 
-            if ($subShapes -eq $null -or $subShapes.Count -eq 0 -or !(IsLbl $subShapes[0]))
+            if ($null -eq $subShapes -or $subShapes.Count -eq 0 -or !(IsLbl $subShapes[0]))
             {
                 write-host "This step does not have a title, neeeext!" -ForegroundColor Magenta;
                 return $null;
@@ -1152,7 +1143,7 @@ class VisioBase
             {
                 $iss = getIntersectingShapes $subShapes $i;
                 $ii  = getInputItem $iss;
-                if ($ii -ne $null)
+                if ($null -ne $ii)
                 {
                     $wizardStep.InputItems += $ii;
                 }
@@ -1177,7 +1168,7 @@ class VisioBase
         for ($i = 1; $i -lt $graph.Count; $i++)
         {
             $gd = GetDialogDefinition $graph $i;
-            if ($gd -ne $null)
+            if ($null -ne $gd)
             {
                 $wizardScenario.ConcreteWizardSteps += $gd;
             }
@@ -1190,35 +1181,41 @@ class VisioBase
 
     [void]static Test()
     {
-        del "$(join-path $env:LOCALAPPDATA 'Microsoft\Visio')\*.vs*";
-        Get-Process 'Visio' -ErrorAction SilentlyContinue | foreach { $_.Kill() };
-        $global:vb = [VisioBase]::NewDocument("ustrme_u.vssx");
-        $global:c1 = $global:vb.Insert('Class', 'BaseClass', 2, 8, $true);
-        $global:ps = $global:vb.GetProperties($global:c1);
-        $x = $global:vb.GetShapeProperty($global:c1, "PinX");
-        $y = $global:vb.GetShapeProperty($global:c1, "PinY");
-        $w = $global:vb.GetShapeProperty($global:c1, "Width");
-        $h = $global:vb.GetShapeProperty($global:c1, "Height");
+        Remove-Item "$(join-path $env:LOCALAPPDATA 'Microsoft\Visio')\*.vs*";
+        Get-Process 'Visio' -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() };
+        $global:vb                = [VisioBase]::NewDocument("ustrme_u.vssx");
+        $global:c1                = $global:vb.Insert('Class', 'BaseClass', 2, 8, $true);
+        $global:ps                = $global:vb.GetProperties($global:c1);
+        Write-Debug $global:ps;
+        $x                        = $global:vb.GetShapeProperty($global:c1, "PinX");
+        $y                        = $global:vb.GetShapeProperty($global:c1, "PinY");
+        $w                        = $global:vb.GetShapeProperty($global:c1, "Width");
+        $h                        = $global:vb.GetShapeProperty($global:c1, "Height");
         Write-Host "x: $x y: $y w: $w h: $h";
 
-        $global:c2 = $global:vb.Insert('Class', 'Inherited', 2, 4, $true);
-        $global:in = $global:vb.Connect('Inheritance', $null, $global:c1, "Bottom", $global:c2, "Top");
-        $fn = Join-Path "$($env:USERPROFILE)\documents" "test.vsdx";
+        $global:c2                = $global:vb.Insert('Class', 'Inherited', 2, 4, $true);
+        $global:in                = $global:vb.Connect('Inheritance', $null, $global:c1, "Bottom", $global:c2, "Top");
+        Write-Debug $global:in;
+        $fn                       = Join-Path "$($env:USERPROFILE)\documents" "test.vsdx";
         Remove-Item -Path $fn -ErrorAction SilentlyContinue;
         $global:vb.SaveAs($fn);
         $global:vb.Close();
 
-        $global:vb = [VisioBase]::OpenDocument($fn);
-        $global:pages = $global:vb.GetPages() | convertto-json -Depth 1 | ConvertFrom-Json;
-        $global:allShapes = $global:vb.GetShapes($null, $null) | convertto-json -Depth 1 | ConvertFrom-Json;
-        $global:classShapes = $global:vb.GetShapes($null, 'Class');
+        $global:vb                = [VisioBase]::OpenDocument($fn);
+        $global:pages             = $global:vb.GetPages() | convertto-json -Depth 1 | ConvertFrom-Json;
+        $global:allShapes         = $global:vb.GetShapes($null, $null) | convertto-json -Depth 1 | ConvertFrom-Json;
+        $global:classShapes       = $global:vb.GetShapes($null, 'Class');
         $global:inheritanceShapes = $global:vb.GetShapes($null, 'Inheritance');
+        Write-Debug $global:pages            ;
+        Write-Debug $global:allShapes        ;
+        Write-Debug $global:classShapes      ;
+        Write-Debug $global:inheritanceShapes;
     }
 
     [void]static TestWizardScenarioCreation([string]$visioDiagramPath, [string]$JsonOutputPath)
     {
-        del "$(join-path $env:LOCALAPPDATA 'Microsoft\Visio')\*.vs*";
-        Get-Process 'Visio' -ErrorAction SilentlyContinue | foreach { $_.Kill() };
+        Remove-Item "$(join-path $env:LOCALAPPDATA 'Microsoft\Visio')\*.vs*";
+        Get-Process 'Visio' -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() };
         $global:vb = [VisioBase]::OpenDocument($visioDiagramPath);
         $global:WizardScenario = $global:vb.WizardScenarioFromVisioDiagram('Some Test');
         $global:WizardScenario | ConvertTo-Json -Depth 12 -Compress | out-file $JsonOutputPath -Encoding ascii;
@@ -1246,14 +1243,20 @@ class VisioBase
 
     [bool]static IsInstalled([string]$appNameRegularExpression)
     {
-        return ((Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | ?{$_.DisplayName -match $appNameRegularExpression}) -ne $null)
+        return ($null -ne (Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* 
+            | Where-Object {$_.DisplayName -match $appNameRegularExpression}))
     }
     
     [string]static GetVisioAppLocation()
     {
-        $il = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall  | % { Get-ItemProperty $_.PsPath }  | where { $_.DisplayName -ne $null } | where { $_.DisplayName.Contains('Microsoft Visio') } | Select -First 1 InstallLocation | select;
+        $il = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall' 
+            | ForEach-Object { Get-ItemProperty $_.PsPath }  
+            | Where-Object { $null -ne $_.DisplayName } 
+            | Where-Object { $_.DisplayName.Contains('Microsoft Visio') } 
+            | Select-Object -First 1 InstallLocation 
+            | Select-Object;
         $rt = Join-Path $il.InstallLocation 'root';
-        $op = (get-childitem -Path $rt -Filter 'Office*').FullName | sort | select -Last 1;
+        $op = (get-childitem -Path $rt -Filter 'Office*').FullName | Sort-Object | Select-Object -Last 1;
         $vl = Join-Path $op 'Visio.exe';
         if (!(Test-Path $vl))
         {
@@ -1266,7 +1269,7 @@ class VisioBase
     [string]static ReadFileFromZip([string]$archivePath, [string]$fileName)
     {
         $fileZip = [System.IO.Compression.ZipFile]::Open($archivePath, 'Update');
-        $entry   = $fileZip.Entries | Where-Object { $_.FullName -match $fileName } | select -First 1 | select;
+        $entry   = $fileZip.Entries | Where-Object { $_.FullName -match $fileName } | Select-Object -First 1 | Select-Object;
         $reader  = [System.IO.StreamReader]($entry).Open();
         $content = $reader.ReadToEnd();
         $reader.Close();

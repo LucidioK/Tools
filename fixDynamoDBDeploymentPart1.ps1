@@ -21,15 +21,15 @@ if (!($doNotDeleteTables))
     {
         $tableName = "$cloudName-$tableName";
         $table = Get-DDBTable -TableName $tableName -ProfileName $profileName -Region $region;
-        if ($table -eq $null)
+        if ($null -eq $table)
         {
             throw "Table $table not found.";
         }
     }
 }
 
-copy 'Deployment\pf_cloud\dynamodb\dynamodb.template' $env:TEMP;
-$template = gc 'Deployment\pf_cloud\dynamodb\dynamodb.template' | ConvertFrom-Json;
+Copy-Item 'Deployment\pf_cloud\dynamodb\dynamodb.template' $env:TEMP;
+$template = Get-Content 'Deployment\pf_cloud\dynamodb\dynamodb.template' | ConvertFrom-Json;
 
 foreach ($tableName in $tablesToRemove)
 {

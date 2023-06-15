@@ -1,13 +1,11 @@
 ﻿param(
-    [string[]]$Authors         = @('nima-ap', 'audleman', 'iouri-s', 'LucidioKuhn', 'MGudgin'),
+    [string[]]$Authors         = @('BarryManilow', 'BarryWhite', 'LucidioKuhn'),
     [int]     $OlderThanInDays = 0)
 
-if ($env:GitHubToken -eq $null)
+if ($null -eq $env:GitHubToken)
 {
     throw "Please create the environment variable GITHUBTOKEN with a token obtained from https://github.com/settings/tokens";
 }
-
-
 
 class JobParam
 {
@@ -16,14 +14,13 @@ class JobParam
     [Hashtable]$header
 }
 
-$start       = get-date;
-$header      = @{ Authorization = "token $($env:GitHubToken)" };
-$jobParam    = [JobParam]::new();
+$start            = get-date;
+$header           = @{ Authorization = "token $($env:GitHubToken)" };
+$jobParam         = [JobParam]::new();
 $jobParam.authors = $Authors;
 $jobParam.header  = $header;
-$repos       = Invoke-RestMethod -Method Get -Uri "https://api.github.com/orgs/LK/repos" -Headers $header;
-$repoCounter = 0;
-$pullRequests = @();
+$repos            = Invoke-RestMethod -Method Get -Uri "https://api.github.com/orgs/LK/repos" -Headers $header;
+$pullRequests     = @();
 
 $block = {
     param($p);
@@ -42,7 +39,7 @@ $block = {
 
         static [Nullable[DateTime]] ParseDate([string]$s)
         {
-            if ($s -ne $null -and $s -match '[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+')
+            if ($null -ne $s -and $s -match '[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+')
             {
                 return [DateTime]::Parse($s);
             }
@@ -87,8 +84,8 @@ $block = {
         else
         {
             $ourPulls     = $pullsPage | 
-                            where { $authors.Contains($_.user.login) -and ((get-date) - [DateTime]::Parse($_.created_at)).Days -gt $OlderThanInDays } |
-                            foreach { [PullRequestSummary]::FromPullRequest($_) };
+                            Where-Object { $authors.Contains($_.user.login) -and ((get-date) - [DateTime]::Parse($_.created_at)).Days -gt $OlderThanInDays } |
+                            ForEach-Object { [PullRequestSummary]::FromPullRequest($_) };
 
             $pullRequests += $ourPulls;
             $page++;

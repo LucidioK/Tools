@@ -23,7 +23,7 @@ $global:mostCommonWordsInEnglish = ('I', 'a', 'able', 'about', 'above', 'act', '
 #    install-module pester -Force -SkipPublisherCheck;
 #}
 
-if ((get-command -Name 'Add-TeamAccount') -eq $null)
+if ($null -eq (get-command -Name 'Add-TeamAccount'))
 {
     Save-Module -Name Team  -Path C:\temp\PowerShell;
     Install-Module -Name Team ;
@@ -39,24 +39,24 @@ $global:MaxRetries = 8;
 function global:getListOfFilesForNaniIndexInGitFolder()
 {
     $undesired = '^\..*|.*_locales.*|.*\.txt|.*/external/.*|.*/assets/.*|.*\.exe.*|.*\.dll.*|.*\.png.*|.*\.ico.*|.*\.bin.*|.*\.nsi.*|.*\.gitignore.*|.*\.svg.*|.*\.map|.*/packages/.*|".*/node_modules/.*"|\.lst|test|\.xml';
-    $l = git ls-files | where { $_ -notmatch $undesired };
+    $l = git ls-files | Where-Object { $_ -notmatch $undesired };
     return $l;
 }
 
 function global:getUninstallData([string]$displayNameRegEx)
 {
-    gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1;
+    Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object{ $_.DisplayName -match $displayNameRegEx } | Select-Object-First 1;
 }
 
 function global:isApplicationInstalled([string]$displayNameRegEx)
 {
-    ( gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1) -ne $null
+    $null -ne ( Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object{ $_.DisplayName -match $displayNameRegEx } | Select-Object-First 1)
 }
 
 function global:uninstallApplication([string]$displayNameRegEx)
 {
-    $ud =  gp HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | where { $_.DisplayName -match $displayNameRegEx } | select -First 1;
-    if ($ud -ne $null)
+    $ud =  Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object{ $_.DisplayName -match $displayNameRegEx } | Select-Object-First 1;
+    if ($null -ne $ud)
     {
         Write-Host "Uninstalling $($ud.DisplayName), version $($ud.DisplayVersion) " -ForegroundColor Green;
         $uninstallString = $ud.UninstallString.Replace('/I{', '/X{');
@@ -78,7 +78,7 @@ function global:uninstallApplication([string]$displayNameRegEx)
 
 Function global:addToPath([string]$newDirectory)
 {
-    $OldPath=(Get-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINESystemCurrentControlSetControlSession ManagerEnvironment’ -Name PATH).Path
+    $OldPath=(Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).Path
 
     IF (!$newDirectory)
     { 
@@ -98,9 +98,9 @@ Function global:addToPath([string]$newDirectory)
         return $OldPath;
     }
 
-    $NewPath=$OldPath+’;’+$newDirectory
+    $NewPath=$OldPath+';'+$newDirectory
 
-    Set-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINESystemCurrentControlSetControlSession ManagerEnvironment’ -Name PATH –Value $newPath
+    Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 
     Return $NewPath
 }
@@ -114,13 +114,13 @@ function global:executeWindowsCommand([string]$command)
 function global:EWC($c1,$c2,$c3,$c4,$c5,$c6,$c7 )
 {
     $c="";
-    if ($c1 -ne $null) { $c += "$c1 "; }
-    if ($c2 -ne $null) { $c += "$c2 "; }
-    if ($c3 -ne $null) { $c += "$c3 "; }
-    if ($c4 -ne $null) { $c += "$c4 "; }
-    if ($c5 -ne $null) { $c += "$c5 "; }
-    if ($c6 -ne $null) { $c += "$c6 "; }
-    if ($c7 -ne $null) { $c += "$c7 "; }
+    if ($null -ne $c1) { $c += "$c1 "; }
+    if ($null -ne $c2) { $c += "$c2 "; }
+    if ($null -ne $c3) { $c += "$c3 "; }
+    if ($null -ne $c4) { $c += "$c4 "; }
+    if ($null -ne $c5) { $c += "$c5 "; }
+    if ($null -ne $c6) { $c += "$c6 "; }
+    if ($null -ne $c7) { $c += "$c7 "; }
 
 
     global:executeWindowsCommand $c;
@@ -128,7 +128,7 @@ function global:EWC($c1,$c2,$c3,$c4,$c5,$c6,$c7 )
 
 function global:getSizeOfMaximumStringFromList([string[]]$stringList)
 {
-    return (($stringList | where { $_ -ne $null } | where { $_.GetType().Name -eq 'string' } | Select-Object -ExpandProperty Length | Measure-Object -Maximum).Maximum);
+    return (($stringList | Where-Object{ $_ -ne $null } | Where-Object{ $_.GetType().Name -eq 'string' } | Select-Object -ExpandProperty Length | Measure-Object -Maximum).Maximum);
 }
 
 function global:gitPullAllSubfoldersOnMasterBranchUnderCurrentFolder()
@@ -137,9 +137,9 @@ function global:gitPullAllSubfoldersOnMasterBranchUnderCurrentFolder()
     $padSize = (getSizeOfMaximumStringFromList $dirs) + 1;
     foreach ($dir in $dirs)
     {
-        pushd .;
+        Push-Location .;
         Write-Host ($dir.PadRight($padSize)) -ForegroundColor Green -NoNewline;
-        cd "$dir";
+        Set-Location "$dir";
         $branch = global:getCurrentBranchViaGit;
         if ($branch -eq 'master')
         {
@@ -149,16 +149,15 @@ function global:gitPullAllSubfoldersOnMasterBranchUnderCurrentFolder()
         {
             Write-Host "branch is not master, it is $branch";
         }
-        popd;
+        Pop-Location;
     }
 }
 
 function global:gitCleanAllSubfoldersUnderCurrentFolder()
 {
-    $dirs = ((get-childitem -directory).Name | Resolve-Path).Path;
     $block = {
         param($dir);
-        cd "$dir";
+        Set-Location "$dir";
         $clean = git clean -fdx  2>&1;
         $gc = git gc --aggressive --force 2>&1;
         return ($dir + "`nClean result:`n" + $clean + "`nGC Result:" + $gc);
@@ -170,9 +169,9 @@ function global:gitCleanAllSubfoldersUnderCurrentFolder()
 function global:getAllCommitUsersForFolder([string]$folderPath)
 {
     $hs = @{};
-    pushd .;
+    Push-Location .;
     $folderPath = Resolve-Path $folderPath;
-    cd $folderPath
+    Set-Location $folderPath
     $log = [string]::Join("`n",(git log --no-merges));
     while ($log -match "Author:.*<([a-z]+)@.*>")
     {
@@ -187,7 +186,7 @@ function global:getAllCommitUsersForFolder([string]$folderPath)
         $log = $log.Substring($p);
     }
 
-    popd;
+    Pop-Location;
     return $hs;
 }
 
@@ -208,7 +207,7 @@ function global:deleteAllVariablesOfType([string]$typeName)
 
 function global:highestVersion([string[]]$versions)
 {
-    return ((guaranteeList $versions) | foreach { [System.Version]$_ } | sort -Descending | select -First 1).ToString();
+    return ((guaranteeList $versions) | ForEach-Object { [System.Version]$_ } | Sort-Object -Descending | Select-Object-First 1).ToString();
 }
 
 function global:joinPathList([string[]]$l)
@@ -245,7 +244,7 @@ function global:loadNugetAssembly([string]$nugetPackageName, [string]$assemblyNa
     $packageVersion      = highestVersion ((get-childitem -Path $nugetPackageFolder).Name);
     $libPath             = joinPathList @($nugetPackageFolder, $packageVersion, 'lib');
     $dotNetVersionFilter = "Net$([environment]::Version.Major)*";
-    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | measure -Maximum).Maximum;
+    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | Measure-Object -Maximum).Maximum;
     $assemblyFullPath    = joinPathList @($nugetPackageFolder, $packageVersion, 'lib', $dotNetVersionFolder, $assemblyNameWithExtension);
 
     [System.Reflection.Assembly]::LoadFrom($assemblyFullPath);
@@ -261,7 +260,7 @@ function global:findNugetAssembly([string]$nugetPackageName, [string]$assemblyNa
     $packageVersion      = highestVersion ((get-childitem -Path $nugetPackageFolder).Name);
     $libPath             = joinPathList @($nugetPackageFolder, $packageVersion, 'lib');
     $dotNetVersionFilter = "Net$([environment]::Version.Major)*";
-    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | measure -Maximum).Maximum;
+    $dotNetVersionFolder = ((Get-ChildItem -Path $libPath -Filter $dotNetVersionFilter -Directory).Name | Measure-Object -Maximum).Maximum;
     $assemblyFullPath    = joinPathList @($nugetPackageFolder, $packageVersion, 'lib', $dotNetVersionFolder, $assemblyNameWithExtension);
     if (!(Test-Path $assemblyFullPath))
     {
@@ -315,10 +314,9 @@ function global:sqliteInsert([System.Data.SQLite.SQLiteConnection]$connection, [
     foreach ($propertyName in $propertyNames)
     {
         $value             = $rowValues."$propertyName";
-        if ($value -ne $null)
+        if ($null -ne $value)
         {
             $fieldNames   += "[$propertyName]";
-            $type          = ($value.GetType()).Name;
             $vs            = $null;
             switch -regex ($typeName)
             {
@@ -357,7 +355,7 @@ function global:sqliteQuery([System.Data.SQLite.SQLiteConnection]$connection, [P
     foreach ($propertyName in $propertyNames)
     {
         $value             = $rowValues."$propertyName";
-        if ($value -ne $null)
+        if ($null -ne $value)
         {
             $type          = ($value.GetType()).Name;
             $vs            = $null;
@@ -380,7 +378,7 @@ function global:sqliteQuery([System.Data.SQLite.SQLiteConnection]$connection, [P
                     break;
                 }        
             }
-            if ($vs -ne $null)
+            if ($null -ne $vs)
             {
                 $conditions   += "[$propertyName]=$vs";
             }
@@ -392,13 +390,13 @@ function global:sqliteQuery([System.Data.SQLite.SQLiteConnection]$connection, [P
     $adapter               = [System.Data.SQLite.SQLiteDataAdapter]::new($command);
     $data                  = [System.Data.DataSet]::new();
     $adapter.Fill($data);
-    return ($data.Tables.Rows | select -Skip 1);
+    return ($data.Tables.Rows | Select-Object-Skip 1);
 }
 
 
 function global:guaranteeList([Object]$o)
 {
-    if ($o -ne $null -and $o.GetType().FullName -ne 'System.Object[]')
+    if ($null -ne $o -and $o.GetType().FullName -ne 'System.Object[]')
     {
         return @($o);
     }
@@ -434,7 +432,7 @@ function global:foreachParallel([object[]]$inputList, [ScriptBlock]$scriptBlockW
         return $returnList;
     }
     
-    $l = foreachParallelInternal $inputList $scriptBlockWithOneParam | where { $_.GetType().Name -ne 'PSRemotingJob' };
+    $l = foreachParallelInternal $inputList $scriptBlockWithOneParam | Where-Object{ $_.GetType().Name -ne 'PSRemotingJob' };
     return (guaranteeList $l);
 }
 
@@ -454,7 +452,7 @@ function global:commandsWithParameter([string]$moduleNamePattern, [string]$comma
 {
     $moduleNamePattern  = $moduleNamePattern.Replace('.','');
     $commandNamePattern = $commandNamePattern.Replace('.', '');
-    gcm -Module $moduleNamePattern -Name $commandNamePattern | where { ($_.Parameters.Keys | where { $_ -match $parameterRegexPattern }) -ne $null };
+    Get-Command -Module $moduleNamePattern -Name $commandNamePattern | Where-Object{ $null -ne ($_.Parameters.Keys | Where-Object{ $_ -match $parameterRegexPattern }) };
 }
 
 function global:sortDictionaryByValue([Hashtable]$dict, [bool]$descending = $false)
@@ -494,12 +492,12 @@ function global:flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomO
     {
         $value = $o."$($property.Name)";
         $name = ($prefix + $property.Name);
-        $type = if ($value -eq $null) { "null" } else { $value.GetType().Name };
-        if ($value -ne $null -and $type -eq 'PSCustomObject')
+        $type = if ($null -eq $value) { "null" } else { $value.GetType().Name };
+        if ($null -ne $value -and $type -eq 'PSCustomObject')
         {
             $newObject = global:flattenObject $value $name $newObject;
         }
-        if ($value -ne $null -and ($type -eq 'Object[]' -or $type -eq 'Hashtable'))
+        if ($null -ne $value -and ($type -eq 'Object[]' -or $type -eq 'Hashtable'))
         {
             Add-Member -InputObject $newObject -MemberType NoteProperty -Name $name -Value ($value | convertto-json -Compress);
         }
@@ -517,9 +515,9 @@ Function global:extractGZipFile{
         $outfile = ($infile -replace '\.gz$','')
         )
 
-    $input = New-Object System.IO.FileStream $inFile, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read)
+    $inputC = New-Object System.IO.FileStream $inFile, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read)
     $output = New-Object System.IO.FileStream $outFile, ([IO.FileMode]::Create), ([IO.FileAccess]::Write), ([IO.FileShare]::None)
-    $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
+    $gzipStream = New-Object System.IO.Compression.GzipStream $inputC, ([IO.Compression.CompressionMode]::Decompress)
 
     $buffer = New-Object byte[](1024)
     while($true){
@@ -530,7 +528,7 @@ Function global:extractGZipFile{
 
     $gzipStream.Close()
     $output.Close()
-    $input.Close()
+    $inputC.Close()
 }
 
 function global:removeProperties([object]$o, [string[]]$propertyNamesToBeRemoved)
@@ -549,12 +547,12 @@ function global:removeProperties([object]$o, [string[]]$propertyNamesToBeRemoved
     return $n;
 }
 
-function global:curlGetBasicAuth([string]$url, [string]$userName, [string]$password) 
+function global:curlGetBasicAuth([string]$url, [string]$userName, [SecureString]$password) 
 {
     $cmdFileName = (([System.IO.Path]::GetTempFileName()) + ".cmd");
     "@echo off`ncurl -u $($userName):$password $url" | Out-File  -Encoding ascii $cmdFileName;
     $r = Invoke-Expression $cmdFileName 2>&1 ;
-    del $cmdFileName;
+    Remove-Item $cmdFileName;
     return $r;
 }
 
@@ -590,7 +588,7 @@ function global:retryLogic([System.Management.Automation.ScriptBlock]$s)
             $ev = $null;
             $v = Invoke-Command -ScriptBlock $s -ErrorVariable $ev;
             $succeeded = $?;
-            if ($ev -ne $null) 
+            if ($null -ne $ev) 
             { 
                 global:handleException $ev $i; 
             }
@@ -629,13 +627,13 @@ function global:createCredentialFromAzureCredentialsJSONFile()
 
 function global:createCredentialFromJsonFile([string]$jsonFileName)
 {
-	$data = gc $jsonFileName | ConvertFrom-Json;
-    return (global:createCredential $data.userName $data.password);
+	$data = Get-Content $jsonFileName | ConvertFrom-Json;
+    return (global:createCredential $data.userName (ConvertTo-SecureString $data.password -AsPlainText -Force));
 }
 
-function global:createCredential([string]$userName, [string]$password)
+function global:createCredential([string]$userName, [SecureString]$password)
 {
-    $cred = New-Object System.Management.Automation.PSCredential($userName, (ConvertTo-SecureString $password -AsPlainText -Force));
+    $cred = New-Object System.Management.Automation.PSCredential($userName, $password);
 	return $cred;
 }
 
@@ -646,7 +644,7 @@ function global:openDefaultBrowser([string]$url = "")
     $browserPath = $browserPath.Replace("%1", $url);
     $startBrowserPath = Join-Path $env:temp "startbrowser.cmd";
     $browserPath | Out-File $startBrowserPath;
-    start $startBrowserPath;
+    Start-Process $startBrowserPath;
 }
 
 function global:jsonBeautify([string]$json)
@@ -709,7 +707,7 @@ function global:toBeautifulJson($o)
 
 function global:cloneObject($o)
 {
-    if ($o -eq $null)
+    if ($null -eq $o)
     {
         return $null;
     }
@@ -863,7 +861,7 @@ function objectModelToHierarchicalDictionaryInternal($obj, [Hashtable]$dic)
         if (!($dic.ContainsKey($memberName)))
         {
             $subObj = $obj."$memberName";
-            if ($subObj -ne $null -and $subObj.GetType().Name.Equals('PSCustomObject'))
+            if ($null -ne $subObj -and $subObj.GetType().Name.Equals('PSCustomObject'))
             {
                 $dic.Add($memberName, [Hashtable]::new());
                 objectModelToHierarchicalDictionaryInternal $subObj $dic[$memberName];
@@ -886,7 +884,7 @@ function global:objectModelToHierarchicalDictionary($obj)
 
 function global:sortDictionaryByKey([hashtable]$dictionary)
 {
-    return $dictionary.GetEnumerator() | sort -Property name;
+    return $dictionary.GetEnumerator() | Sort-Object -Property name;
 }
 
 function global:flatObjectModelToDictionary($obj)
@@ -923,7 +921,7 @@ function global:findAndLoadMissingAssemblyFromExceptionText([string]$exceptionTe
         $pbt = (global:extractWithRegex $exceptionText 'PublicKeyToken=([a-zA-Z0-9]+)');
         Write-Host "Trying to load $dll $ver $pbt" -ForegroundColor Green -NoNewline;
         $asm = global:findFirstAssembly $dll $ver $pbt;
-        if ($asm -ne $null)
+        if ($null -ne $asm)
         {
              [System.Reflection.Assembly]::LoadFile($asm);
              Write-Host " loaded from $asm" -ForegroundColor Green;
@@ -968,13 +966,12 @@ function global:initializeVSS(
     [string]$vsURI,
     [string]$personalToken)
 {
-    $global:vssPersonalToken = $personalToken;
-    pushd .
-    cd $path;
+    Push-Location .
+    Set-Location $path;
     $dlls = (Get-ChildItem -path $path -Filter '*.dll').FullName;
     foreach ($dll in $dlls) { [System.Reflection.Assembly]::LoadFile($dll); }
     $cred = [Microsoft.VisualStudio.Services.Common.VssBasicCredentials]::new('', $personalToken);
-    
+    return $cred;
 }
 
 function global:getAllDirectoriesInCDrive()
@@ -1071,7 +1068,7 @@ function global:findFile([string]$searchFolder, [string]$fileNamePattern, [strin
             }
             $needMultipleWordPostProcessing = $words.Count -gt 1;
         }
-        $connector = new-object system.data.oledb.oledbdataadapter -argument $sql, "provider=search.collatordso;extended properties=’application=windows’;";
+        $connector = new-object system.data.oledb.oledbdataadapter -argument $sql, "provider=search.collatordso;extended properties='application=windows';";
         $dataset = new-object system.data.dataset; 
         if ($connector.fill($dataset)) 
         { 
@@ -1081,7 +1078,7 @@ function global:findFile([string]$searchFolder, [string]$fileNamePattern, [strin
                 $resultsWithExactMatch = @();
                 foreach ($filename in $finalresult)
                 {
-                    if (([string]::Join("", (gc $filename))).Contains($optionalTextToFindWithoutWildcards))
+                    if (([string]::Join("", (Get-Content $filename))).Contains($optionalTextToFindWithoutWildcards))
                     {
                         $resultsWithExactMatch += $filename;
                     }
@@ -1212,7 +1209,7 @@ function global:populateVariableWithBogusValueAccordingToType($obj, [string]$nam
                 $value = Invoke-Expression "[$typeName]::new()"  -ErrorAction SilentlyContinue;
             }
             catch{}
-            if ($value -ne $null)
+            if ($null -ne $value)
             {
                 global:populateBogusObject $value;
             }
@@ -1228,7 +1225,7 @@ function global:populateVariableWithBogusValueAccordingToType($obj, [string]$nam
 
 function global:populateBogusObject($obj)
 {
-    if ($obj -eq $null)
+    if ($null -eq $obj)
     {
         Write-Host "Null object, exiting" -ForegroundColor Yellow;
     }
@@ -1288,10 +1285,10 @@ function getPropertyNameForSerialization($property)
         if ($name -eq "")
         {
             $attribute = $property.CustomAttributes.Where({ $serializationAttribute -eq $_.AttributeType.Name });
-            if ($attribute -ne $null)
+            if ($null -ne $attribute)
             {
                 $namedAttribute = $attribute[0].NamedArguments.Where({ $_.MemberName -eq $serializationAttributes[$serializationAttribute]});
-                if ($namedAttribute -ne $null)
+                if ($null -ne $namedAttribute)
                 {
                     $name = $namedAttribute[0].TypedValue.Value;
                 }
@@ -1341,7 +1338,6 @@ function global:toJson($obj)
         if ($nj.Count -gt 0)
         {
             $trimLine = $line.Trim();
-            [string]$previousLine = "___";
             $positionLast = $nj.Count - 1;
             $lastLine = $nj[$positionLast];
 
@@ -1373,17 +1369,17 @@ function global:signAllPSMUnderFolder([string]$path)
 {
     $cert=(Get-ChildItem cert:\CurrentUser\My -codesign)[0];
 
-    if ($cert -eq $null)
+    if ($null -eq $cert)
     {
         $certificateFilePath = join-path $env:temp 'SelfSigned.cer';
         Invoke-Command 'makecert' -ArgumentList ('-n', '"CN=PowerShell Local Certificate Root"', '-a', 'sha1', '-eku', '1.3.6.1.5.5.7.3.3', '-r', '-sv', 'root.pvk', $certificateFilePath, '-ss', 'Root', '-sr', 'localMachine');
         Invoke-Command 'makecert' -ArgumentList ('-pe', '-n', '"CN=PowerShellUser"', '-ss', 'MY', '-a', 'sha1', '-eku', '1.3.6.1.5.5.7.3.3', '-iv', 'root.pvk', '-ic', $certificateFilePath);
-        del $certificateFilePath;
+        Remove-Item $certificateFilePath;
     }
 
     $cert=(Get-ChildItem cert:\CurrentUser\My -codesign)[0];
 
-    if ($cert -eq $null)
+    if ($null -eq $cert)
     {
         throw "Could not create the certificate, take a look at https://www.hanselman.com/blog/SigningPowerShellScripts.aspx to create a self-signed certificate manually, then run this script again.";
     }
@@ -1391,10 +1387,10 @@ function global:signAllPSMUnderFolder([string]$path)
     [string]$subject = "CN=Powershell $(Get-Date -Format 'yyyyMMddhhmmss')";
     New-SelfSignedCertificate -Type Custom -Subject $subject -CertStoreLocation 'Cert:\CurrentUser\My';
 
-    Get-ChildItem -Recurse -File -Filter '*.psm*' -Path $Path | foreach {
+    Get-ChildItem -Recurse -File -Filter '*.psm*' -Path $Path | ForEach-Object {
         $fn = $_.FullName;
         $ac = Get-AuthenticodeSignature $fn;
-        if ($ac -eq $null)
+        if ($null -eq $ac)
         {
             Write-Host "Signing $fn " -ForegroundColor Green;
             Set-AuthenticodeSignature $fn $cert;
@@ -1470,11 +1466,11 @@ function global:gitNumberOfChangedFiles()
     }
     catch
     {}
-    if ($cf -ne $null -and $cf.GetType() -eq [String])
+    if ($null -ne $cf -and $cf.GetType() -eq [String])
     {
         $count = 1;
     }
-    if ($cf -ne $null -and $cf.GetType().BaseType -eq [System.Array])
+    if ($null -ne $cf -and $cf.GetType().BaseType -eq [System.Array])
     {
         $count = $cf.Count;
     }
@@ -1505,7 +1501,7 @@ function global:getCurrentBranch()
     while ($dirname.Length -gt 4 -and $previousDirName -ne $dirname -and $itIsAGitDirectory -eq $false)
     {
         $g=Get-ChildItem -Path $dirname -Name '.git' -Hidden;
-        $itIsAGitDirectory = $g -ne $null;
+        $itIsAGitDirectory = $null -ne $g;
         if (!($itIsAGitDirectory))
         {
             $previousDirName = $dirname;
@@ -1518,7 +1514,7 @@ function global:getCurrentBranch()
         if ((get-item -Path $fetchHeadFilePath).Length -lt 50) {
             git fetch --force;
         }
-        $branch = (gc $fetchHeadFilePath).Split("`n")[0].Split("`t")[2].Split(" ")[1];
+        $branch = (Get-Content $fetchHeadFilePath).Split("`n")[0].Split("`t")[2].Split(" ")[1];
     }
     return $branch;
 }
@@ -1526,7 +1522,6 @@ function global:getCurrentBranch()
 function global:shortDate()
 {
     $dd = get-date;
-    $yr = $dd.Year;
     $mo = $dd.Month.ToString('d2');
     $dy = $dd.Day.ToString('d2');
     $hr = $dd.Hour.ToString('d2');
@@ -1544,7 +1539,7 @@ function global:isThisAGitDirectory()
     while ($dirname.Length -lt 4 -and $previousDirName -ne $dirname -and $itIsAGitDirectory -eq $false)
     {
         $g=Get-ChildItem -Path $dirname -Name '.git' -Hidden;
-        $itIsAGitDirectory = $g -ne $null;
+        $itIsAGitDirectory = $null -ne $g;
         if (!($itIsAGitDirectory))
         {
             $previousDirName = $dirname;
@@ -1567,12 +1562,12 @@ function global:installCassandraIfNeeded()
 function global:isChocoPackageInstalled([string]$packageName)
 {
     $info = choco info $packageName;
-    return $info -ne $null -and $info.Count -gt 4;
+    return $null -ne $info -and $info.Count -gt 4;
 }
 
 function global:updatePowershellIfNeeded()
 {
-    $psg=get-packageprovider | where { $_.Name -eq 'PowerShellGet' };
+    $psg=get-packageprovider | Where-Object{ $_.Name -eq 'PowerShellGet' };
     $compareResult = global:compareVersions $psg.Version.ToString() "1.6.0.0";
     if ($compareResult -lt 0)
     {
@@ -1590,7 +1585,7 @@ function global:installChocoIfNeeded()
     }
     catch
     {
-        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'));
     }
 }
 
@@ -1658,7 +1653,7 @@ function global:httpGetWithBasicAuth([string]$uri, [string]$userName,[string]$pa
 function global:httpGetWithBasicAuthAsXml([string]$uri, [string]$userName,[string]$password)
 {
     $content = global:httpGetWithBasicAuth $uri $userName $password 'application/xml';
-    if ($content -ne $null -and $content.GetTypeCode() -eq 'String')
+    if ($null -ne $content -and $content.GetTypeCode() -eq 'String')
     {
         [xml]$xml=$content;
         return $xml;
@@ -1669,7 +1664,7 @@ function global:httpGetWithBasicAuthAsXml([string]$uri, [string]$userName,[strin
 function global:httpGetWithBasicAuthAsJson([string]$uri, [string]$userName,[string]$password)
 {
     $content = global:httpGetWithBasicAuth $uri $userName $password 'application/json';
-    if ($content -ne $null -and $content.GetTypeCode() -eq 'String')
+    if ($null -ne $content -and $content.GetTypeCode() -eq 'String')
     {
         $json=$content | ConvertFrom-Json;
         return $json;
@@ -1681,7 +1676,7 @@ function global:httpGetWithBasicAuthAsJson([string]$uri, [string]$userName,[stri
 function global:getEndPointsFromAtomsPubAccordingToTitle([string]$uri, [string]$userName,[string]$password, [string]$title)
 {
     $atomsPubTxt = global:httpGetWithBasicAuth $uri $userName $password;
-    if ($atomsPubTxt -eq $null -or $atomsPubTxt.GetTypeCode() -ne 'String')
+    if ($null -eq $atomsPubTxt -or $atomsPubTxt.GetTypeCode() -ne 'String')
     {
         throw "Could not retrieve AtomsPub data from $uri";
     }
@@ -1691,7 +1686,7 @@ function global:getEndPointsFromAtomsPubAccordingToTitle([string]$uri, [string]$
     foreach ($entry in $entries)
     { 
         $links = $entry.GetElementsByTagName('link'); 
-        $pal = $links | where { $_.title -eq $title };
+        $pal = $links | Where-Object{ $_.title -eq $title };
         try
         {
             $result = $result + $pal.href;
@@ -1705,7 +1700,7 @@ function global:getEndPointsFromAtomsPubAccordingToTitle([string]$uri, [string]$
 function global:getModifiedFiles()
 {
     $git = global:GetGit;
-    $gr=&$git ('status', '--porcelain') | foreach { Resolve-Path ([string]$_).Substring(3).Replace('/','\').Trim('"') -ErrorAction Ignore }
+    $gr=&$git ('status', '--porcelain') | ForEach-Object { Resolve-Path ([string]$_).Substring(3).Replace('/','\').Trim('"') -ErrorAction Ignore }
     return $gr;
 }
 
@@ -1716,7 +1711,7 @@ function global:SaveChangedFiles()
     global:CreateDirectoryIfNeded 'SavedFiles';
     [string]$destinationBasePath = Resolve-Path 'SavedFiles';
     $modified = global:getModifiedFiles;
-    [string]$basePath = pwd;
+    [string]$basePath = Get-Location;
     $undesired = ('packages', '.vs', 'bin', 'obj');
     foreach ($path in $modified)
     {
@@ -1762,7 +1757,7 @@ function global:CreateDirectoryIfNeded($path)
 {
     if (!(Test-Path $path))
     {
-        md $path;
+        mkdir $path;
     }
 }
 
@@ -1788,26 +1783,26 @@ function global:StartDockerContainerIfNeeded([string]$containerName)
 function global:FindExecutableInPath([string]$executableName)
 {
     $path=$null;
-    $env:Path.Split(';') | foreach {
+    $env:Path.Split(';') | ForEach-Object {
         if (($_ -ne $null) -and ($_.Length -gt 0) -and (Test-Path $_ -PathType Container))
         {
             [string]$fn = Join-Path $_ $executableName;
             [string]$fnExe = Join-Path $_ ($executableName + ".exe");
             [string]$fnCmd = Join-Path $_ ($executableName + ".cmd");
             [string]$fnBat = Join-Path $_ ($executableName + ".bat");
-            if ($path -eq $null -and (Test-Path $fn))
+            if ($null -eq $path -and (Test-Path $fn))
             {
                 $path=$fn;
             }
-			if ($path -eq $null -and (Test-Path $fnExe))
+			if ($null -eq $path -and (Test-Path $fnExe))
             {
                 $path=$fnExe;
             }   
-            if ($path -eq $null -and (Test-Path $fnExe))
+            if ($null -eq $path -and (Test-Path $fnExe))
             {
                 $path=$fnCmd;
             }            
-			if ($path -eq $null -and (Test-Path $fnExe))
+			if ($null -eq $path -and (Test-Path $fnExe))
             {
                 $path=$fnBat;
             }        
@@ -1819,7 +1814,7 @@ function global:FindExecutableInPath([string]$executableName)
 function global:FindExecutableInPathThrowIfNotFound([string]$executableName, [string]$messageInCaseOfNotFound)
 {
     $exec=global:FindExecutableInPath $executableName;
-    if ($exec -eq $null)
+    if ($null -eq $exec)
     {
         throw $messageInCaseOfNotFound;
     }
@@ -1829,7 +1824,7 @@ function global:FindExecutableInPathThrowIfNotFound([string]$executableName, [st
 function global:findFileUpAndUp([string]$filePattern)
 {
     $path = $PSScriptRoot;
-    while ($path -ne $null -and !(Test-Path (Join-Path $path $filePattern)))
+    while ($null -ne $path -and !(Test-Path (Join-Path $path $filePattern)))
     {
 		try
 		{
@@ -1840,7 +1835,7 @@ function global:findFileUpAndUp([string]$filePattern)
 			$path = $null;
 		}
     }
-	if ($path -ne $null)
+	if ($null -ne $path)
 	{
 		return (Join-Path $path $filePattern);
 	}
@@ -1877,7 +1872,7 @@ function global:AddToPathIfNeeded([string]$folderToAdd)
 {
     $found = $false;
     $folderToAdd = $folderToAdd.ToLowerInvariant();
-    $env:Path.Split(';') | foreach {
+    $env:Path.Split(';') | ForEach-Object {
         [string]$folderToTest = $_.ToLowerInvariant();
         if ($folderToTest -eq $folderToAdd)
         {
@@ -1893,7 +1888,7 @@ function global:AddToPathIfNeeded([string]$folderToAdd)
 function global:GetClassesFromSwaggerJson([string]$swaggerFile)
 {
     $json = Get-Content $swaggerFile | Out-String | ConvertFrom-Json;
-    $classList =  $json.definitions | Get-Member -MemberType NoteProperty | select { $_.Name };
+    $classList =  $json.definitions | Get-Member -MemberType NoteProperty | Select-Object { $_.Name };
     [string]$classes = "";
     foreach ($class in $classList)
     {
@@ -1922,7 +1917,7 @@ function global:dotnetPublish()
 
 function global:IsUsableList($l)
 {
-    if ($l -ne $null)
+    if ($null -ne $l)
     {
         if ($l.GetType().BaseType.ToString() -eq 'System.Array')
         {
@@ -1937,18 +1932,18 @@ function global:listUnion($l1, $l2)
     $lr=@();
     if (global:IsUsableList($l1))
     {
-        $l1 | foreach { $lr += $_ };
+        $l1 | ForEach-Object { $lr += $_ };
     }
     if (global:IsUsableList($l2))
     {
-        $l2 | foreach { $lr += $_ };
+        $l2 | ForEach-Object { $lr += $_ };
     }
     return $lr;
 }
 
 function global:GetGit()
 {
-    if ($global:git -eq $null -or $global:git.Length -eq 0)      
+    if ($null -eq $global:git -or $global:git.Length -eq 0)      
     { 
         $global:git      = FindExecutableInPathThrowIfNotFound 'git' 'Please install git';
     }
@@ -2026,7 +2021,7 @@ function global:getFileListWithoutRepeatedFiles($pathList)
     foreach ($path in $pathList)
     {
         Get-ChildItem -Path $path | 
-            foreach { $fileList = $fileList + (global:revertAndLowerString $_.FullName); } 
+            ForEach-Object { $fileList = $fileList + (global:revertAndLowerString $_.FullName); } 
     }
     $fileList = $fileList | Sort-Object;
     $finalList = @();
@@ -2043,7 +2038,7 @@ function global:getFileListWithoutRepeatedFiles($pathList)
     return $finalList;
 }
 
-if ($global:finder -eq $null)
+if ($null -eq $global:finder)
 {
 
     [string]$findClass = 
@@ -2083,7 +2078,7 @@ if ($global:finder -eq $null)
     $global:finder = [FindClassLK]::new();
 }
 
-if ($global:directoryFinderDefined -eq $null)
+if ($null -eq $global:directoryFinderDefined)
 {
     [string]$directoryFinderClass = 
 @"

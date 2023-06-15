@@ -10,7 +10,7 @@ $start = get-date;
 function getBuild([int]$buildDefinitionId, [int]$buildNumber)
 {
     $b = Get-Build -ProjectName $global:settings.tfsProject -BuildNumber $buildNumber -Definitions @($buildDefinitionId);
-    if ($b -ne $null)
+    if ($null -ne $b)
     {
         lk-ser $b;
     }
@@ -21,15 +21,15 @@ function getBuild([int]$buildDefinitionId, [int]$buildNumber)
     return $b;
 }
 
-$bd = (get-builddefinition   -ProjectName $global:settings.tfsProject) | where { $_.name -eq $buildDefinitionName };
-if ($bd -eq $null) { throw "Build $buildDefinitionName not found"; }
+$bd = (get-builddefinition   -ProjectName $global:settings.tfsProject) | Where-Object { $_.name -eq $buildDefinitionName };
+if ($null -eq $bd) { throw "Build $buildDefinitionName not found"; }
 
-$rd = (Get-ReleaseDefinition -ProjectName $global:settings.tfsProject) | where { $_.name -eq $releaseDefinitionName };
-if ($rd -eq $null) { throw "Release $releaseDefinitionName not found"; }
+$rd = (Get-ReleaseDefinition -ProjectName $global:settings.tfsProject) | Where-Object { $_.name -eq $releaseDefinitionName };
+if ($null -eq $rd) { throw "Release $releaseDefinitionName not found"; }
 
 $b = Add-Build -ProjectName $global:settings.tfsProject -BuildDefinitionName $buildDefinitionName;
 
-for ($s = (getBuild $bd.id $b.id); $s.Result -eq $null; $s = (getBuild $bd.id $b.id))
+for ($s = (getBuild $bd.id $b.id); $null -eq $s.Result; $s = (getBuild $bd.id $b.id))
 {
     Write-Host "Waiting for build $($b.id), currently with status $($s.Status)" -ForegroundColor Green;
     Start-Sleep -Seconds 3;

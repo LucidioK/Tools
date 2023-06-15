@@ -6,7 +6,7 @@
   Please set the LogglyApiToken environment variable with the token from https://LK.loggly.com/account/users/api/tokens
 #>
 
-if ($env:LogglyApiToken -eq $null)
+if ($null -eq $env:LogglyApiToken)
 {
     write-host "`n`n`n";
     throw "Please set the LogglyApiToken environment variable with the token from https://LK.loggly.com/account/users/api/tokens";
@@ -106,8 +106,8 @@ function RemoveLogMsg([string]$eventsResult)
 
     $tempFileName = [System.IO.Path]::GetTempFileName();
     $events | Export-Csv -Encoding ASCII -Path $tempFileName -NoTypeInformation;
-    $eventsResult = gc $tempFileName;
-    del $tempFileName;
+    $eventsResult = Get-Content $tempFileName;
+    Remove-Item $tempFileName;
     if (!($eventsResult.Contains("`n")))
     {
         $eventsResult = $eventsResult -replace '" "20',"`"`n`"";
@@ -118,7 +118,6 @@ function RemoveLogMsg([string]$eventsResult)
 
 function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$newObject = $null)
 {
-    $originalO = $O;
     if ($newObject -eq $null)
     {
         $newObject = new-object -TypeName PSCustomObject;
@@ -127,24 +126,23 @@ function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$
     {
         $prefix += "_";
     }
-    $propertyNames = get-member -InputObject $o -MemberType NoteProperty | select -ExpandProperty Name;
+    $propertyNames = get-member -InputObject $o -MemberType NoteProperty | Select-Object -ExpandProperty Name;
     $exceptionProperties = @{};
     foreach ($propertyName in $propertyNames)
     {
         $value = $o."$propertyName";
         $name = ($prefix + $propertyName);
-        $type = if ($value -eq $null) { "null" } else { $value.GetType().Name };
-#Write-host "--> $name $type $value" -ForegroundColor Green;
-        if ($value -ne $null -and $type -eq 'Object[]')
+        $type = if ($null -eq $value) { "null" } else { $value.GetType().Name };
+        if ($null -ne $value -and $type -eq 'Object[]')
         {
             $value = $value | ConvertTo-Json | ConvertFrom-Json;
             $type = $value.GetType().Name;
         }
-        if ($value -ne $null -and $type -eq 'PSCustomObject')
+        if ($null -ne $value -and $type -eq 'PSCustomObject')
         {
             $newObject = flattenObject $value $name $newObject;
         }
-        if ($value -ne $null -and $type -eq 'Hashtable')
+        if ($null -ne $value -and $type -eq 'Hashtable')
         {
             Add-Member -InputObject $newObject -MemberType NoteProperty -Name $name -Value ($value | convertto-json -Compress);
         }
@@ -164,16 +162,15 @@ function flattenObject([PSCustomObject]$o, [string]$prefix="", [PSCustomObject]$
             }
         }
     }
-    $innerExceptionsPropertyNames = $exceptionProperties.Keys | where { $_.Contains("InnerExceptions") };
-    $exceptionsPropertyNames      = $exceptionProperties.Keys | where { $_.Contains("_Exception_") -and !($_.Contains("InnerExceptions")) };
-    if ($innerExceptionsPropertyNames -ne $null -and $innerExceptionsPropertyNames.Count -gt 0)
+    $innerExceptionsPropertyNames = $exceptionProperties.Keys | Where-Object { $_.Contains("InnerExceptions") };
+    if ($null -ne $innerExceptionsPropertyNames -and $innerExceptionsPropertyNames.Count -gt 0)
     {
         $innerMostLevel = "";
-        while (($innerExceptionsPropertyNames | where { $_.Contains($innerMostLevel + '_InnerExceptions') }).Count -gt 0)
+        while (($innerExceptionsPropertyNames | Where-Object { $_.Contains($innerMostLevel + '_InnerExceptions') }).Count -gt 0)
         {
             $innerMostLevel += '_InnerExceptions';
         }
-        $innerMostPropertyNames = $exceptionProperties.Keys | where { $_.Contains($innerMostLevel) };
+        $innerMostPropertyNames = $exceptionProperties.Keys | Where-Object { $_.Contains($innerMostLevel) };
         foreach ($innerMostPropertyName in $innerMostPropertyNames)
         {
             $plainExceptionPropertyName = $innerMostPropertyName.Replace($innerMostLevel, "");
@@ -317,16 +314,16 @@ function logglyFieldsApi
   A string with the csv or json representation of the search results.
   
 .EXAMPLE
-  Loggly-Search 
+  Search-Loggly 
   Will return all entries with terms 'InnerException StackTrace' in the last 24h
 
 .EXAMPLE
-  Loggly-Search -terms '*' -format csv -from -1h
+  Search-Loggly -terms '*' -format csv -from -1h
   "19-03-11 21:03:38.162 -00:00","","a29e466","main","playstreameventanonymizer","34.213.208.16"
 "19-03-11 21:03:38.162 -00:00",". . .
 
 .EXAMPLE
-    Loggly-Search -terms '*' -format csv -from -15s -jsonLevel * -size 10 -columns 'json.Application,json.Cloud,http.clientHost,json.Exception,json.Commit,json.Level'
+    Search-Loggly -terms '*' -format csv -from -15s -jsonLevel * -size 10 -columns 'json.Application,json.Cloud,http.clientHost,json.Exception,json.Commit,json.Level'
     Done in 0 seconds
     "timestamp","json.Level","json.Exception","json.Commit","json.Cloud","json.Application","http.clientHost"
     "19-03-11 21:05:56.050 -00:00","Information","","a29e466","main","playstreamrelaypublisher","34.213.208.16"
@@ -341,7 +338,7 @@ function logglyFieldsApi
     "19-03-11 21:05:54.000 -00:00","Debug","","a29e466","main","logicserver","34.213.208.16"
 
 .EXAMPLE
-    Loggly-Search -terms '*' -format json -from -2d -jsonLevel Error -size 10 -columns '*'
+    Search-Loggly -terms '*' -format json -from -2d -jsonLevel Error -size 10 -columns '*'
     [
         {
             "http_clientHost":  "1.2.3.4",
@@ -363,7 +360,7 @@ function logglyFieldsApi
     ]
 
 #>
-function Loggly-Search
+function Search-Loggly
 {
     [CmdletBinding()]
     param(
@@ -461,7 +458,7 @@ function Loggly-Search
   A dictionary (Hashtable) where the key is the field value and the value is the count.
   
 .EXAMPLE
-  Loggly-Search 
+  Search-Loggly 
   Name                           Value                                                                                                                                                                                                                             
   ----                           -----                                                                                                                                                                                                                             
   0c285e7                        10                                                                                                                                                                                                                                
@@ -471,7 +468,7 @@ function Loggly-Search
   d2c8566                        120516  
 
 .EXAMPLE
-  Loggly-GetFieldValueCount -from '-2h' -fieldName json.Cloud
+  Get-LogglyFieldValueCount -from '-2h' -fieldName json.Cloud
     Name                           Value                                                                                                                                                                                                                             
     ----                           -----                                                                                                                                                                                                                             
     rblx                           2844                                                                                                                                                                                                                              
@@ -491,14 +488,14 @@ function Loggly-Search
     spi                            101972       
 
 .EXAMPLE
-    Loggly-GetFieldValueCount -from '-2d' -fieldName json.Cloud -filter 'json.Level:"Error" json.QueueName:"release_queue_v2"'
+    Get-LogglyFieldValueCount -from '-2d' -fieldName json.Cloud -filter 'json.Level:"Error" json.QueueName:"release_queue_v2"'
 
     Name                           Value                                                                                                                                                                                                                             
     ----                           -----                                                                                                                                                                                                                             
     prod.corematch.xboxlive.com    2         
 #>
 
-function Loggly-GetFieldValueCount 
+function Get-LogglyFieldValueCount 
 {
     [CmdletBinding()]
     param(
@@ -583,7 +580,7 @@ function Loggly-GetFieldValueCount
   A list with the distict values.
   
 .EXAMPLE
-    Loggly-GetFieldValues 
+    Get-LogglyFieldValues 
     a29e466
     451edda
     47c7c73
@@ -595,16 +592,16 @@ function Loggly-GetFieldValueCount
     84ab783
 
 .EXAMPLE
-    Loggly-GetFieldValues -from '-2h' -fieldName json.Cloud
+    Get-LogglyFieldValues -from '-2h' -fieldName json.Cloud
     main
     something else
 . . .    
 
 .EXAMPLE
-     Loggly-GetFieldValues -from '-2d' -fieldName json.Cloud -filter 'json.Level:"Error" json.QueueName:"release_queue_v2"'
+     Get-LogglyFieldValues -from '-2d' -fieldName json.Cloud -filter 'json.Level:"Error" json.QueueName:"release_queue_v2"'
           
 #>
-function Loggly-GetFieldValues 
+function Get-LogglyFieldValues 
 {
     [CmdletBinding()]
     param(
@@ -638,7 +635,7 @@ function Loggly-GetFieldValues
         [parameter(Mandatory=$false, Position=4)][string]$fieldName  = 'json.Commit'
     )
     $content = logglyFieldsApi $filter $from $to $fieldName;
-    return ($content."$fieldName" | select -ExpandProperty term);
+    return ($content."$fieldName" | Select-Object -ExpandProperty term);
 }
 
 
@@ -664,25 +661,25 @@ function Loggly-GetFieldValues
   A (double) number from 0 to 100. 100 meaning that all events were non-error, 0 meaning all events were error events.
   
 .EXAMPLE
-    Loggly-GetHealthIndex
+    Get-LogglyHealthIndex
     89.1083673844154
 
     In the last 24h, on all verticals and all clouds, 89% of all events were non-error.
 
 .EXAMPLE
-    Loggly-GetHealthIndex
+    Get-LogglyHealthIndex
     89
 
     In the last 24h, on all verticals and all clouds, 89% of all events were non-error.
 
 .EXAMPLE
-    Loggly-GetHealthIndex -jsonCommit 63db5cc
+    Get-LogglyHealthIndex -jsonCommit 63db5cc
     30.5084745762712
 
     Only 31% of events related to commit 63db5cc were healthy.
 
 .EXAMPLE
-    Loggly-GetFieldValues -fieldName json.Vertical -from '-2h' | foreach { write-host "$_ $(Loggly-GetHealthIndex -jsonVertical $_ -from '-2h')" }
+    Get-LogglyFieldValues -fieldName json.Vertical -from '-2h' | foreach { write-host "$_ $(Get-LogglyHealthIndex -jsonVertical $_ -from '-2h')" }
 
     master 98.5588454189197
     spi 66.8677290057679
@@ -705,7 +702,7 @@ function Loggly-GetFieldValues
     p-d401 99.5699952221691
      
 #>
-function Loggly-GetHealthIndex
+function Get-LogglyHealthIndex
 {
     [CmdletBinding()]
     param(
@@ -734,7 +731,7 @@ function Loggly-GetHealthIndex
     }
     $content = $result.Content | ConvertFrom-Json;
     [double]$totalEvents = $content.total_events;
-    [double]$errorEvents = [linq.enumerable]::Where($content.'json.Level', [Func[object, bool]]{param ($l); return $l.term -eq 'Error';}) | select -ExpandProperty count;
+    [double]$errorEvents = [linq.enumerable]::Where($content.'json.Level', [Func[object, bool]]{param ($l); return $l.term -eq 'Error';}) | Select-Object -ExpandProperty count;
 
     [double]$healthIndex = (($totalEvents - $errorEvents) * 100) / $totalEvents;
 

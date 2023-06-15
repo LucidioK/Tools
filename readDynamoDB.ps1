@@ -19,7 +19,7 @@ class retrieveResult
 function toNumberIfNeeded([string]$value, [string]$type)
 {
     $result = $value;
-    if ($type -eq 'Numeric' -and $value -ne $null -and $value.GetType().Name -eq 'String')
+    if ($type -eq 'Numeric' -and $null -ne $value -and $value.GetType().Name -eq 'String')
     {
         $maxInt64 = [System.Int64]::MaxValue.ToString().PadLeft($value.Length);
 
@@ -62,7 +62,7 @@ function toNumberIfNeeded([string]$value, [string]$type)
 function scanTableDocs([Amazon.DynamoDBv2.DocumentModel.Table]$dynamoDBTable, [Hashtable]$filterValues, [int]$maxCount)
 {
     $scanFilter  = [Amazon.DynamoDBv2.DocumentModel.ScanFilter]::new();
-    if ($filterValues -eq $null) 
+    if ($null -eq $filterValues) 
     {
         $filterValues = @{};
     }
@@ -82,7 +82,7 @@ function scanTableDocs([Amazon.DynamoDBv2.DocumentModel.Table]$dynamoDBTable, [H
         $retrieveResult.Count   += $result.Count;
         write-host "Read $($result.Count) documents, total $($retrieveResult.Count) until now..." -ForegroundColor Green;
         $retrieveResult.Records += $result.GetNextSet();
-        if ($result.NextKey -eq $null -or $result.PaginationToken -eq $null -or $retrieveResult.Count -ge $maxCount)
+        if ($null -eq $result.NextKey -or $null -eq $result.PaginationToken -or $retrieveResult.Count -ge $maxCount)
         {
             $pleaseRepeat = $false;
         }
@@ -137,7 +137,7 @@ foreach ($tableDoc in $tableDocs.Records)
     foreach ($key in $tableDoc.Keys)
     {
         $value    = $tableDoc[$key].Value;
-        $type     = if ($tableDoc[$key].Type -eq $null) { "Binary" } else { $tableDoc[$key].Type.ToString(); }
+        $type     = if ($null -eq $tableDoc[$key].Type) { "Binary" } else { $tableDoc[$key].Type.ToString(); }
         $value    = toNumberIfNeeded $value $type;
         Add-Member -InputObject $item -MemberType NoteProperty -Name $key -Value $value;
     }

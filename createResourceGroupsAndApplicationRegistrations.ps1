@@ -1,6 +1,5 @@
 ﻿
-$appRegKeyStartDate = Get-Date       ; 
-$appRegKeyEndDate   = $startDate.AddYears(2);
+
 $data = @();
 for ($i = 1; $i -le 1000; $i++)
 {
@@ -12,13 +11,13 @@ for ($i = 1; $i -le 1000; $i++)
     $appUri       = "https://$appRegName.azurewebsites.net";
     Write-Host "$appRegName $appRegKeyName $resGrpName" -ForegroundColor Green;
     $newApp       = get-azureadapplication -SearchString $appRegName;
-    if ($newApp -eq $null)
+    if ($null -eq $newApp)
     {
         $newApp       = new-azureadapplication -DisplayName $appRegName -IdentifierUris $appUri;
         $newAppKeyPwd = new-azureadapplicationpasswordcredential -ObjectId $newApp.ObjectId  -CustomKeyIdentifier $appRegKeyName -StartDate $startDate -EndDate $endDate;
     }
     $newRG        = get-azresourcegroup -Name $resGrpName -Location 'centralus' -ErrorAction SilentlyContinue;
-    if ($newRg -eq $null)
+    if ($null -eq $newRg)
     {
         $newRG        = new-azresourcegroup -Name $resGrpName -Location 'centralus';
     }

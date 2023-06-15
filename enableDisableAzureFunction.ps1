@@ -155,7 +155,7 @@ function global:enableDisableAzureFunction
         [parameter(Mandatory=$true)][string]$FunctionName,
         [parameter(Mandatory=$true)][ValidateSet('Enable','Disable')][string]$EnableOrDisable)
 
-    if ((get-module Az.Resources) -eq $null) { Install-Module -Name Az.Resources -Force -AllowClobber; }
+    if ($null -eq (get-module Az.Resources)) { Install-Module -Name Az.Resources -Force -AllowClobber; }
     
     $header = Get-AzureBasicHeader;
     $url = "https://management.azure.com/subscriptions/$global:AzureSubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$FunctionAppName/config/appSettings/list?api-version=2018-11-01";
@@ -163,7 +163,7 @@ function global:enableDisableAzureFunction
     $propertyName = "AzureWebJobs.$($FunctionName).Disabled";
     $isDisabled = ($EnableOrDisable -eq 'Disable');
 
-    if ($rsp.Properties."$propertyName" -eq $null)
+    if ($null -eq $rsp.Properties."$propertyName")
     {
         Add-Member -InputObject $fap.Properties -MemberType NoteProperty -Name $propertyName -Value $isDisabled;
     }
